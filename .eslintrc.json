@@ -1,0 +1,6 @@
+{
+    "extends": ["@pixi/eslint-config"],
+    "rules": {
+        "camelcase": ["off"]
+    }
+}

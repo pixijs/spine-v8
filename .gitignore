@@ -1,0 +1,6 @@
+.DS_Store
+/node_modules
+/docs
+/dist
+/lib
+example.api.json*

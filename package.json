@@ -1,0 +1,70 @@
+{
+  "name": "@pixi/spine-pixi",
+  "version": "0.0.0",
+  "description": "A port of the @esotericsoftware/spine-pixi runtime to PixiJS v8.",
+  "author": "PixiJS Team",
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    }
+  },
+  "homepage": "https://pixijs.com/",
+  "bugs": "https://github.com/pixijs/spine-pixi/issues",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pixijs/spine-pixi.git"
+  },
+  "scripts": {
+    "start": "xs serve",
+    "watch": "xs watch",
+    "build": "xs build && npm run build:iife",
+    "build:iife": "npx esbuild --bundle ./src/index.ts --tsconfig=./tsconfig.json  --sourcemap --outfile=./dist/spine-pixi.js --external:pixi.js --format=iife --global-name=spine",
+    "docs": "xs docs",
+    "lint": "xs lint --max-warnings 0",
+    "lint:fix": "xs lint",
+    "types": "xs types",
+    "release": "npm run build && xs bump,docs,publish,git-push",
+    "test": "xs test"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=16",
+    "npm": ">=8"
+  },
+  "files": [
+    "dist/",
+    "lib/"
+  ],
+  "peerDependencies": {
+    "pixi.js": "^8.0.0-0"
+  },
+  "devDependencies": {
+    "@pixi/eslint-config": "^5.1.0",
+    "@pixi/extension-scripts": "^2.0.0",
+    "esbuild": "^0.18.20",
+    "pixi.js": "^8.0.0-rc.2",
+    "typescript": "^5.3.3",
+    "@webdoc/template-library": "^2.2.0"
+  },
+  "dependencies": {
+    "@esotericsoftware/spine-core": "^4.1.50"
+  },
+  "extensionConfig": {
+    "lint": [
+      "src",
+      "test"
+    ],
+    "docsName": "PixiJS Spine",
+    "docsTitle": "PixiJS Spine",
+    "tsconfig": "./tsconfig.build.json",
+    "environments": []
+  }
+}
