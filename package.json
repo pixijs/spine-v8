@@ -55,7 +55,7 @@
     "@webdoc/template-library": "^2.2.0"
   },
   "dependencies": {
-    "@esotericsoftware/spine-core": "^4.1.50"
+    "@esotericsoftware/spine-core": "~4.1.50"
   },
   "extensionConfig": {
     "lint": [
