@@ -139,7 +139,7 @@ export class Spine extends Container implements View
         this.autoUpdate = options?.autoUpdate ?? true;
     }
 
-    public update(ticker: Ticker): void
+    public update(dt: number): void
     {
         if (this.autoUpdate && !this.autoUpdateWarned)
         {
@@ -147,14 +147,14 @@ export class Spine extends Container implements View
             console.warn('You are calling update on a Spine instance that has autoUpdate set to true. This is probably not what you want.');
             this.autoUpdateWarned = true;
         }
-        this.internalUpdate(ticker);
+        this.internalUpdate(0, dt);
     }
 
-    protected internalUpdate(ticker: Ticker): void
+    protected internalUpdate(_deltaFrame: any, deltaSeconds?: number): void
     {
         // Because reasons, pixi uses deltaFrames at 60fps.
         // We ignore the default deltaFrames and use the deltaSeconds from pixi ticker.
-        this.updateState(ticker.deltaMS / 1000);
+        this.state.update(deltaSeconds ?? Ticker.shared.deltaMS / 1000);
     }
 
     get bounds()
