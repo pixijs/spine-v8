@@ -65,6 +65,6 @@
     "docsName": "PixiJS Spine",
     "docsTitle": "PixiJS Spine",
     "tsconfig": "./tsconfig.build.json",
-    "environments": []
+    "environments": ["node"]
   }
 }
