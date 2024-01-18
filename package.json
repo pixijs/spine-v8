@@ -1,6 +1,6 @@
 {
   "name": "@pixi/spine-pixi",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A port of the @esotericsoftware/spine-pixi runtime to PixiJS v8.",
   "author": "PixiJS Team",
   "main": "./lib/index.js",
