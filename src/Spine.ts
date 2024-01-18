@@ -154,7 +154,7 @@ export class Spine extends Container implements View
     {
         // Because reasons, pixi uses deltaFrames at 60fps.
         // We ignore the default deltaFrames and use the deltaSeconds from pixi ticker.
-        this.state.update(deltaSeconds ?? Ticker.shared.deltaMS / 1000);
+        this.updateState(deltaSeconds ?? Ticker.shared.deltaMS / 1000);
     }
 
     get bounds()
