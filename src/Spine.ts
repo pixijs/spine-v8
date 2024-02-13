@@ -313,11 +313,9 @@ export class Spine extends Container implements View
     {
         const cacheKey = `${skeleton}-${atlas}`;
 
-        let skeletonData = Cache.get<SkeletonData>(cacheKey);
-
-        if (skeletonData)
+        if (Cache.has(cacheKey))
         {
-            return new Spine(skeletonData);
+            return new Spine(Cache.get<SkeletonData>(cacheKey));
         }
 
         const skeletonAsset = Assets.get<any | Uint8Array>(skeleton);
@@ -329,7 +327,7 @@ export class Spine extends Container implements View
 
         // TODO scale?
         parser.scale = scale;
-        skeletonData = parser.readSkeletonData(skeletonAsset);
+        const skeletonData = parser.readSkeletonData(skeletonAsset);
 
         Cache.set(cacheKey, skeletonData);
 
