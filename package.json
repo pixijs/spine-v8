@@ -44,14 +44,14 @@
     "lib/"
   ],
   "peerDependencies": {
-    "pixi.js": "^8.0.0-0"
+    "pixi.js": "^8.0.0"
   },
   "devDependencies": {
     "@pixi/eslint-config": "^5.1.0",
-    "@pixi/extension-scripts": "^2.0.0",
-    "esbuild": "^0.18.20",
-    "pixi.js": "^8.0.0-rc.2",
-    "typescript": "^5.3.3",
+    "@pixi/extension-scripts": "^2.4.1",
+    "esbuild": "^0.20.1",
+    "pixi.js": "^8.0.1",
+    "typescript": "^5.4.2",
     "@webdoc/template-library": "^2.2.0"
   },
   "dependencies": {

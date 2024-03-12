@@ -294,6 +294,9 @@ export class Spine extends Container implements View
     public override destroy(options: DestroyOptions = false)
     {
         super.destroy(options);
+        Ticker.shared.remove(this.internalUpdate, this);
+        this.state.clearListeners();
+        this.debug = undefined;
         this.skeleton = null as any;
         this.state = null as any;
     }
