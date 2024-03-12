@@ -2,10 +2,14 @@
   "name": "@pixi/spine-pixi",
   "version": "1.0.5",
   "description": "A port of the @esotericsoftware/spine-pixi runtime to PixiJS v8.",
+  "homepage": "https://pixijs.com/",
+  "bugs": "https://github.com/pixijs/spine-pixi/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pixijs/spine-pixi.git"
+  },
+  "license": "MIT",
   "author": "PixiJS Team",
-  "main": "./lib/index.js",
-  "module": "./lib/index.mjs",
-  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "import": "./lib/index.mjs",
@@ -13,49 +17,42 @@
       "types": "./lib/index.d.ts"
     }
   },
-  "homepage": "https://pixijs.com/",
-  "bugs": "https://github.com/pixijs/spine-pixi/issues",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pixijs/spine-pixi.git"
-  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "dist/",
+    "lib/"
+  ],
   "scripts": {
-    "start": "xs serve",
-    "watch": "xs watch",
     "build": "xs build && npm run build:iife",
     "build:iife": "npx esbuild --bundle ./src/index.ts --tsconfig=./tsconfig.json  --sourcemap --outfile=./dist/spine-pixi.js --external:pixi.js --format=iife --global-name=spine",
     "docs": "xs docs",
     "lint": "xs lint --max-warnings 0",
     "lint:fix": "xs lint",
-    "types": "xs types",
     "release": "npm run build && xs bump,docs,publish,git-push",
-    "test": "xs test"
+    "start": "xs serve",
+    "test": "xs test",
+    "types": "xs types",
+    "watch": "xs watch"
   },
-  "publishConfig": {
-    "access": "public"
+  "dependencies": {
+    "@esotericsoftware/spine-core": "~4.1.50"
+  },
+  "devDependencies": {
+    "@pixi/extension-scripts": "^2.4.1",
+    "pixi.js": "^8.0.1",
+    "typescript": "^5.4.2"
+  },
+  "peerDependencies": {
+    "pixi.js": "^8.0.0"
   },
   "engines": {
     "node": ">=16",
     "npm": ">=8"
   },
-  "files": [
-    "dist/",
-    "lib/"
-  ],
-  "peerDependencies": {
-    "pixi.js": "^8.0.0"
-  },
-  "devDependencies": {
-    "@pixi/eslint-config": "^5.1.0",
-    "@pixi/extension-scripts": "^2.4.1",
-    "esbuild": "^0.20.1",
-    "pixi.js": "^8.0.1",
-    "typescript": "^5.4.2",
-    "@webdoc/template-library": "^2.2.0"
-  },
-  "dependencies": {
-    "@esotericsoftware/spine-core": "~4.1.50"
+  "publishConfig": {
+    "access": "public"
   },
   "extensionConfig": {
     "lint": [
