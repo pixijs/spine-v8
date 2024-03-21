@@ -122,7 +122,7 @@ const spineTextureAtlasLoader: AssetExtension<RawAtlas | TextureAtlas, ISpineAtl
 
                     const pixiPromise = loader.load<Texture>({ src: url, data: metadata.imageMetadata }).then((texture) =>
                     {
-                        page.setTexture(SpineTexture.from(texture.baseTexture));
+                        page.setTexture(SpineTexture.from(texture.source));
                     });
 
                     textureLoadingPromises.push(pixiPromise);
