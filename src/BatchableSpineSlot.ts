@@ -109,7 +109,32 @@ export class BatchableSpineSlot implements BatchableObject
 
         const vertexSize = this.vertexSize;
 
-        const abgr = this.renderable.groupColorAlpha;
+        const parentColor:number = this.renderable.groupColor; // BGR
+        const parentAlpha:number = this.renderable.groupAlpha;
+
+        const slotColor: {r: number, g:number, b: number, a: number} = slot.color;
+
+        let abgr:number;
+
+        const mixedA = (slotColor.a * parentAlpha) * 255;
+
+        if (parentColor !== 0xFFFFFF)
+        {
+            const parentB = (parentColor >> 16) & 0xFF;
+            const parentG = (parentColor >> 8) & 0xFF;
+            const parentR = parentColor & 0xFF;
+
+            const mixedR = (slotColor.r * parentR) * 255;
+            const mixedG = (slotColor.g * parentG) * 255;
+            const mixedB = (slotColor.b * parentB) * 255;
+
+            abgr = ((mixedA) << 24) | (mixedB << 16) | (mixedG << 8) | mixedR;
+        }
+        else
+        {
+            abgr = ((mixedA) << 24) | ((slotColor.b * 255) << 16) | ((slotColor.g * 255) << 8) | (slotColor.r * 255);
+        }
+
         const uvs = attachment.uvs;
 
         const matrix = this.renderable.groupTransform;
