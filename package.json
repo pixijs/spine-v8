@@ -41,11 +41,11 @@
   },
   "devDependencies": {
     "@pixi/extension-scripts": "^2.4.1",
-    "pixi.js": "^8.0.1",
+    "pixi.js": "^8.1.3",
     "typescript": "^5.4.2"
   },
   "peerDependencies": {
-    "pixi.js": "^8.0.0"
+    "pixi.js": "^8.1.2"
   },
   "engines": {
     "node": ">=16",
