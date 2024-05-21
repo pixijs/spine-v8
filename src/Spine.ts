@@ -280,9 +280,18 @@ export class Spine extends Container implements View
         bounds.addBounds(this.bounds);
     }
 
-    // passed local space..
-    public containsPoint(_point: PointData)
+    public containsPoint(point: PointData)
     {
+        const bounds = this.bounds;
+
+        if (point.x >= bounds.minX && point.x <= bounds.maxX)
+        {
+            if (point.y >= bounds.minY && point.y <= bounds.maxY)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 
