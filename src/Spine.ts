@@ -27,7 +27,7 @@
  * SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-import { Assets, Bounds, Cache, Container, ContainerOptions, DestroyOptions, PointData, Ticker, View } from 'pixi.js';
+import { Assets, Bounds, Cache, Container, ContainerOptions, DEG_TO_RAD, DestroyOptions, PointData, Ticker, View } from 'pixi.js';
 import { getSkeletonBounds } from './getSkeletonBounds';
 import { ISpineDebugRenderer } from './SpineDebugRenderer';
 import {
@@ -239,18 +239,12 @@ export class Spine extends Container implements View
             container.scale.x = bone.getWorldScaleX();
             container.scale.y = bone.getWorldScaleY();
 
-            // Assuming bone is your Spine bone object
-            const rotationX = bone.getWorldRotationX();
-            const rotationY = bone.getWorldRotationY();
+            const rotationX = bone.getWorldRotationX() * DEG_TO_RAD;
+            const rotationY = bone.getWorldRotationY() * DEG_TO_RAD;
 
-            // Convert degrees to radians
-            const rotationXRad = rotationX * (Math.PI / 180);
-            const rotationYRad = rotationY * (Math.PI / 180);
-
-            // Combine rotations using trigonometry
             container.rotation = -Math.atan2(
-                Math.sin(rotationXRad) + Math.sin(rotationYRad),
-                Math.cos(rotationXRad) + Math.cos(rotationYRad)
+                Math.sin(rotationX) + Math.sin(rotationY),
+                Math.cos(rotationX) + Math.cos(rotationY)
             );
         });
         this.onViewUpdate();
