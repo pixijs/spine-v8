@@ -187,12 +187,12 @@ export class Spine extends Container implements View
             const aux = bone.parent.worldToLocal(vectorAux);
 
             bone.x = aux.x;
-            bone.y = aux.y;
+            bone.y = -aux.y;
         }
         else
         {
             bone.x = vectorAux.x;
-            bone.y = vectorAux.y;
+            bone.y = -vectorAux.y;
         }
     }
 
@@ -218,7 +218,7 @@ export class Spine extends Container implements View
         }
 
         outPos.x = bone.worldX;
-        outPos.y = bone.worldY;
+        outPos.y = -bone.worldY;
 
         return outPos;
     }
@@ -227,6 +227,32 @@ export class Spine extends Container implements View
     {
         this.state.update(dt);
         this._boundsDirty = true;
+
+        // update the mappings..
+
+        this._mappings.forEach((mapping) =>
+        {
+            const { bone, container } = mapping;
+
+            container.position.set(bone.worldX, -bone.worldY);
+
+            container.scale.x = bone.getWorldScaleX();
+            container.scale.y = bone.getWorldScaleY();
+
+            // Assuming bone is your Spine bone object
+            const rotationX = bone.getWorldRotationX();
+            const rotationY = bone.getWorldRotationY();
+
+            // Convert degrees to radians
+            const rotationXRad = rotationX * (Math.PI / 180);
+            const rotationYRad = rotationY * (Math.PI / 180);
+
+            // Combine rotations using trigonometry
+            container.rotation = -Math.atan2(
+                Math.sin(rotationXRad) + Math.sin(rotationYRad),
+                Math.cos(rotationXRad) + Math.cos(rotationYRad)
+            );
+        });
         this.onViewUpdate();
     }
 
@@ -250,6 +276,53 @@ export class Spine extends Container implements View
         }
 
         this.debug?.renderDebug(this);
+    }
+
+    attachToBone(container:Container, bone:string | Bone)
+    {
+        this.detachFromBone(container, bone);
+
+        if (typeof bone === 'string')
+        {
+            bone = this.skeleton.findBone(bone) as Bone;
+        }
+
+        if (!bone)
+        {
+            throw new Error(`Bone ${bone} not found`);
+        }
+
+        // TODO only add once??
+        this.addChild(container);
+
+        // TODO search for copies... - one container - to one bone!
+        this._mappings.push({
+            bone,
+            container
+        });
+    }
+
+    detachFromBone(container:Container, bone:string | Bone)
+    {
+        if (typeof bone === 'string')
+        {
+            bone = this.skeleton.findBone(bone) as Bone;
+        }
+
+        if (!bone)
+        {
+            throw new Error(`Bone ${bone} not found`);
+        }
+
+        this.removeChild(container);
+
+        this._mappings = this._mappings.filter((mapping) =>
+            mapping.bone !== bone && mapping.container !== container);
+    }
+
+    getBoneNames()
+    {
+        return this.skeleton.bones.map((bone) => bone.data.name);
     }
 
     updateBounds()
