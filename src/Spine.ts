@@ -85,6 +85,9 @@ export class Spine extends Container implements View
     public state: AnimationState;
     public skeletonBounds: SkeletonBounds;
     private _debug?: ISpineDebugRenderer | undefined = undefined;
+
+    private _mappings:{bone:Bone, container:Container}[] = [];
+
     public get debug(): ISpineDebugRenderer | undefined
     {
         return this._debug;
