@@ -406,7 +406,7 @@ export class Spine extends Container implements View
         this.debug = undefined;
         this.skeleton = null as any;
         this.state = null as any;
-        this._mappings = null as any;
+        (this._mappings as any) = null;
     }
 
     /** Whether or not to round the x/y position of the sprite. */
