@@ -323,8 +323,16 @@ export class Spine extends Container implements View
 
         this.removeChild(container);
 
-        this._mappings = this._mappings.filter((mapping) =>
-            mapping.bone !== bone && mapping.container !== container);
+        for (let i = 0; i < this._mappings.length; i++)
+        {
+            const mapping = this._mappings[i];
+
+            if (mapping.bone === bone && mapping.container === container)
+            {
+                this._mappings.splice(i, 1);
+                break;
+            }
+        }
     }
 
     /**
