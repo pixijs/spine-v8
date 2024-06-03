@@ -335,16 +335,6 @@ export class Spine extends Container implements View
         }
     }
 
-    /**
-     * A helper function to get an array of all the bone names from the Skeleton.
-     *
-     * @returns The names of the bones in the skeleton
-     */
-    getBoneNames()
-    {
-        return this.skeleton.bones.map((bone) => bone.data.name);
-    }
-
     updateBounds()
     {
         this._boundsDirty = false;
