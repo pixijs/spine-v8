@@ -278,6 +278,13 @@ export class Spine extends Container implements View
         this.debug?.renderDebug(this);
     }
 
+    /**
+     * Attaches a PixiJS container to a specified bone. This will map the world transform of the bone
+     * to the attached container. A container can only be attached to one bone at a time.
+     *
+     * @param container - The container to attach to the bone
+     * @param bone - The bone id or  bone to attach to
+     */
     attachToBone(container:Container, bone:string | Bone)
     {
         this.detachFromBone(container, bone);
@@ -302,6 +309,12 @@ export class Spine extends Container implements View
         });
     }
 
+    /**
+     * Removes a PixiJS container from the bone it is attached to.
+     *
+     * @param container - The container to detach from the bone
+     * @param bone - The bone id or  bone to detach from
+     */
     detachFromBone(container:Container, bone:string | Bone)
     {
         if (typeof bone === 'string')
@@ -320,6 +333,11 @@ export class Spine extends Container implements View
             mapping.bone !== bone && mapping.container !== container);
     }
 
+    /**
+     * A helper function to get an array of all the bone names from the Skeleton.
+     *
+     * @returns The names of the bones in the skeleton
+     */
     getBoneNames()
     {
         return this.skeleton.bones.map((bone) => bone.data.name);
