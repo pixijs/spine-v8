@@ -295,11 +295,11 @@ export class Spine extends Container implements View
     }
 
     /**
-     * Attaches a PixiJS container to a specified bone. This will map the world transform of the bone
-     * to the attached container. A container can only be attached to one bone at a time.
+     * Attaches a PixiJS container to a specified slot. This will map the world transform of the slots bone
+     * to the attached container. A container can only be attached to one slot at a time.
      *
-     * @param container - The container to attach to the bone
-     * @param bone - The bone id or  bone to attach to
+     * @param container - The container to attach to the slot
+     * @param slot - The slot id or  slot to attach to
      */
     attachToSlot(container:Container, slot:string | Slot)
     {
@@ -328,10 +328,10 @@ export class Spine extends Container implements View
     }
 
     /**
-     * Removes a PixiJS container from the bone it is attached to.
+     * Removes a PixiJS container from the slot it is attached to.
      *
-     * @param container - The container to detach from the bone
-     * @param slot - The bone id or  bone to detach from
+     * @param container - The container to detach from the slot
+     * @param slot - The slot id or slot to detach from
      */
     detachFromSlot(container:Container, slot:string | Slot)
     {
