@@ -27,7 +27,7 @@
  * SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-import { Assets, Bounds, Cache, Container, ContainerOptions, DEG_TO_RAD, DestroyOptions, PointData, Ticker, View } from 'pixi.js';
+import { Assets, Bounds, Cache, Container, ContainerOptions, DEG_TO_RAD, DestroyOptions, InstructionSet, PointData, Ticker, View } from 'pixi.js';
 import { getSkeletonBounds } from './getSkeletonBounds';
 import { ISpineDebugRenderer } from './SpineDebugRenderer';
 import {
@@ -40,6 +40,7 @@ import {
     SkeletonBounds,
     SkeletonData,
     SkeletonJson,
+    Slot,
     type TextureAtlas,
     TrackEntry,
     Vector2
@@ -52,6 +53,8 @@ export type SpineFromOptions = {
 };
 
 const vectorAux = new Vector2();
+
+Skeleton.yDown = true;
 
 export interface SpineOptions extends ContainerOptions
 {
@@ -86,7 +89,7 @@ export class Spine extends Container implements View
     public skeletonBounds: SkeletonBounds;
     private _debug?: ISpineDebugRenderer | undefined = undefined;
 
-    private readonly _mappings:{bone:Bone, container:Container}[] = [];
+    readonly _slotAttachments:{slot:Slot, container:Container}[] = [];
 
     public get debug(): ISpineDebugRenderer | undefined
     {
@@ -192,7 +195,7 @@ export class Spine extends Container implements View
         else
         {
             bone.x = vectorAux.x;
-            bone.y = -vectorAux.y;
+            bone.y = vectorAux.y;
         }
     }
 
@@ -218,7 +221,7 @@ export class Spine extends Container implements View
         }
 
         outPos.x = bone.worldX;
-        outPos.y = -bone.worldY;
+        outPos.y = bone.worldY;
 
         return outPos;
     }
@@ -228,13 +231,15 @@ export class Spine extends Container implements View
         this.state.update(dt);
         this._boundsDirty = true;
 
-        // update the mappings..
-
-        this._mappings.forEach((mapping) =>
+        for (let i = 0; i < this._slotAttachments.length; i++)
         {
-            const { bone, container } = mapping;
+            const slotAttachment = this._slotAttachments[i];
 
-            container.position.set(bone.worldX, -bone.worldY);
+            const { slot, container } = slotAttachment;
+
+            const bone = slot.bone;
+
+            container.position.set(bone.worldX, bone.worldY);
 
             container.scale.x = bone.getWorldScaleX();
             container.scale.y = bone.getWorldScaleY();
@@ -242,11 +247,12 @@ export class Spine extends Container implements View
             const rotationX = bone.getWorldRotationX() * DEG_TO_RAD;
             const rotationY = bone.getWorldRotationY() * DEG_TO_RAD;
 
-            container.rotation = -Math.atan2(
+            container.rotation = Math.atan2(
                 Math.sin(rotationX) + Math.sin(rotationY),
                 Math.cos(rotationX) + Math.cos(rotationY)
             );
-        });
+        }
+
         this.onViewUpdate();
     }
 
@@ -279,26 +285,28 @@ export class Spine extends Container implements View
      * @param container - The container to attach to the bone
      * @param bone - The bone id or  bone to attach to
      */
-    attachToBone(container:Container, bone:string | Bone)
+    attachToSlot(container:Container, slot:string | Slot)
     {
-        this.detachFromBone(container, bone);
+        this.detachFromSlot(container, slot);
 
-        if (typeof bone === 'string')
+        container.includeInBuild = false;
+
+        if (typeof slot === 'string')
         {
-            bone = this.skeleton.findBone(bone) as Bone;
+            slot = this.skeleton.findSlot(slot) as Slot;
         }
 
-        if (!bone)
+        if (!slot)
         {
-            throw new Error(`Bone ${bone} not found`);
+            throw new Error(`Slot ${slot} not found`);
         }
 
         // TODO only add once??
         this.addChild(container);
 
         // TODO search for copies... - one container - to one bone!
-        this._mappings.push({
-            bone,
+        this._slotAttachments.push({
+            slot,
             container
         });
     }
@@ -307,29 +315,31 @@ export class Spine extends Container implements View
      * Removes a PixiJS container from the bone it is attached to.
      *
      * @param container - The container to detach from the bone
-     * @param bone - The bone id or  bone to detach from
+     * @param slot - The bone id or  bone to detach from
      */
-    detachFromBone(container:Container, bone:string | Bone)
+    detachFromSlot(container:Container, slot:string | Slot)
     {
-        if (typeof bone === 'string')
+        container.includeInBuild = true;
+
+        if (typeof slot === 'string')
         {
-            bone = this.skeleton.findBone(bone) as Bone;
+            slot = this.skeleton.findSlot(slot) as Slot;
         }
 
-        if (!bone)
+        if (!slot)
         {
-            throw new Error(`Bone ${bone} not found`);
+            throw new Error(`Bone ${slot} not found`);
         }
 
         this.removeChild(container);
 
-        for (let i = 0; i < this._mappings.length; i++)
+        for (let i = 0; i < this._slotAttachments.length; i++)
         {
-            const mapping = this._mappings[i];
+            const mapping = this._slotAttachments[i];
 
-            if (mapping.bone === bone && mapping.container === container)
+            if (mapping.slot === slot && mapping.container === container)
             {
-                this._mappings.splice(i, 1);
+                this._slotAttachments.splice(i, 1);
                 break;
             }
         }
@@ -396,7 +406,7 @@ export class Spine extends Container implements View
         this.debug = undefined;
         this.skeleton = null as any;
         this.state = null as any;
-        (this._mappings as any) = null;
+        (this._slotAttachments as any) = null;
     }
 
     /** Whether or not to round the x/y position of the sprite. */

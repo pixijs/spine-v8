@@ -44,14 +44,6 @@ export function getSkeletonBounds(skeleton:Skeleton, out:Bounds)
 {
     out.clear();
 
-    const rootBone = skeleton.getRootBone() as Bone;
-
-    rootBone.x = 0;
-    rootBone.y = 0;
-    rootBone.scaleX = 1;
-    rootBone.scaleY = -1;
-    rootBone.rotation = 0;
-
     skeleton.updateWorldTransform();
 
     const drawOrder = skeleton.drawOrder;

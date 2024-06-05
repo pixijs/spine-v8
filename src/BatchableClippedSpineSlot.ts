@@ -100,7 +100,7 @@ export class BatchableClippedSpineSlot implements BatchableObject
 
             // position
             float32View[index++] = clippedVertices[localIndex];
-            float32View[index++] = clippedVertices[localIndex + 1] * -1;
+            float32View[index++] = clippedVertices[localIndex + 1];
 
             // uv
             float32View[index++] = clippedVertices[localIndex + 6];

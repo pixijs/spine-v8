@@ -27,7 +27,7 @@
  * SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-import { BigPool, extensions, ExtensionType, type Renderer, type RenderPipe, Texture } from 'pixi.js';
+import { BigPool, collectAllRenderables, extensions, ExtensionType, type Renderer, type RenderPipe, Texture } from 'pixi.js';
 import { BatchableClippedSpineSlot } from './BatchableClippedSpineSlot';
 import { BatchableSpineSlot } from './BatchableSpineSlot';
 import { Spine } from './Spine';
@@ -39,6 +39,8 @@ const QUAD_TRIANGLES = [0, 1, 2, 2, 3, 0];
 const QUAD_VERTS = new Float32Array(8);
 const lightColor = new Color();
 const darkColor = new Color();
+
+const clipper = new SkeletonClipping();
 
 // eslint-disable-next-line max-len
 export class SpinePipe implements RenderPipe<Spine>
@@ -79,7 +81,7 @@ export class SpinePipe implements RenderPipe<Spine>
         this._returnActiveBatches();
     }
 
-    addRenderable(spine: Spine)
+    addRenderable(spine: Spine, instructionSet)
     {
         const batcher = this.renderer.renderPipes.batch;
 
@@ -97,8 +99,6 @@ export class SpinePipe implements RenderPipe<Spine>
         const drawOrder = spine.skeleton.drawOrder;
 
         const activeBatchableSpineSlot = this.activeBatchableSpineSlots;
-
-        const clipper = new SkeletonClipping();
 
         for (let i = 0, n = drawOrder.length; i < n; i++)
         {
@@ -167,6 +167,17 @@ export class SpinePipe implements RenderPipe<Spine>
             else
             {
                 clipper.clipEndWithSlot(slot);
+            }
+
+            const containerAttachment = spine._slotAttachments.find((mapping) => mapping.slot === slot);
+
+            if (containerAttachment)
+            {
+                const container = containerAttachment.container;
+
+                container.includeInBuild = true;
+                collectAllRenderables(container, instructionSet, this.renderer.renderPipes);
+                container.includeInBuild = false;
             }
         }
 

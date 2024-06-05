@@ -153,7 +153,7 @@ export class BatchableSpineSlot implements BatchableObject
             // index++;
             // float32View[index++] *= -1;
             const x = float32View[index];
-            const y = -float32View[index + 1];
+            const y = float32View[index + 1];
 
             float32View[index++] = (a * x) + (c * y) + tx;
             float32View[index++] = (b * x) + (d * y) + ty;
