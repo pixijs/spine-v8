@@ -28,7 +28,6 @@
  *****************************************************************************/
 
 import {
-    type Bone,
     ClippingAttachment,
     MeshAttachment,
     RegionAttachment,

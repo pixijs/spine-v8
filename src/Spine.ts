@@ -27,7 +27,18 @@
  * SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-import { Assets, Bounds, Cache, Container, ContainerOptions, DEG_TO_RAD, DestroyOptions, InstructionSet, PointData, Ticker, View } from 'pixi.js';
+import {
+    Assets,
+    Bounds,
+    Cache,
+    Container,
+    ContainerOptions,
+    DEG_TO_RAD,
+    DestroyOptions,
+    PointData,
+    Ticker,
+    View
+} from 'pixi.js';
 import { getSkeletonBounds } from './getSkeletonBounds';
 import { ISpineDebugRenderer } from './SpineDebugRenderer';
 import {

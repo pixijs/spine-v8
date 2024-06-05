@@ -100,6 +100,8 @@ export class SpinePipe implements RenderPipe<Spine>
 
         const activeBatchableSpineSlot = this.activeBatchableSpineSlots;
 
+        const roundPixels = (this.renderer._roundPixels | spine._roundPixels) as 0 | 1;
+
         for (let i = 0, n = drawOrder.length; i < n; i++)
         {
             const slot = drawOrder[i];
@@ -135,7 +137,7 @@ export class SpinePipe implements RenderPipe<Spine>
                             activeBatchableSpineSlot.push(batchableSpineSlot);
 
                             batchableSpineSlot.texture = (attachment.region?.texture.texture) || Texture.WHITE;
-                            batchableSpineSlot.roundPixels = (this.renderer._roundPixels | spine._roundPixels) as 0 | 1;
+                            batchableSpineSlot.roundPixels = roundPixels;
 
                             batchableSpineSlot.setClipper(clipper);
                             batchableSpineSlot.renderable = spine;
