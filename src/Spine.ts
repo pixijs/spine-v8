@@ -116,7 +116,7 @@ export class Spine extends Container implements View
     private _lastAttachments: Attachment[];
 
     private _stateChanged: boolean;
-    private attachmentCache: Record<string, AttachmentCacheData> = {};
+    private attachmentCacheData: Record<string, AttachmentCacheData> = {};
 
     public get debug(): ISpineDebugRenderer | undefined
     {
@@ -135,6 +135,7 @@ export class Spine extends Container implements View
         }
         this._debug = value;
     }
+
     private autoUpdateWarned = false;
     private _autoUpdate = true;
 
@@ -258,9 +259,15 @@ export class Spine extends Container implements View
         return outPos;
     }
 
-    updateState(dt:number)
+    /**
+     * Will update the state based on the specified time, this will not apply the state to the skeleton
+     * as this is differed until the `applyState` method is called.
+     *
+     * @param time the time at which to set the state
+     */
+    updateState(time:number)
     {
-        this.state.update(dt);
+        this.state.update(time);
 
         this._stateChanged = true;
 
@@ -269,36 +276,14 @@ export class Spine extends Container implements View
         this.onViewUpdate();
     }
 
-    updateSlotAttachments()
-    {
-        for (let i = 0; i < this._slotAttachments.length; i++)
-        {
-            const slotAttachment = this._slotAttachments[i];
-
-            const { slot, container } = slotAttachment;
-
-            container.visible = this.skeleton.drawOrder.includes(slot);
-
-            if (container.visible)
-            {
-                const bone = slot.bone;
-
-                container.position.set(bone.worldX, bone.worldY);
-
-                container.scale.x = bone.getWorldScaleX();
-                container.scale.y = bone.getWorldScaleY();
-
-                const rotationX = bone.getWorldRotationX() * DEG_TO_RAD;
-                const rotationY = bone.getWorldRotationY() * DEG_TO_RAD;
-
-                container.rotation = Math.atan2(
-                    Math.sin(rotationX) + Math.sin(rotationY),
-                    Math.cos(rotationX) + Math.cos(rotationY)
-                );
-            }
-        }
-    }
-
+    /**
+     * Applies the state to this spine instance.
+     * - updates the state to the skeleton
+     * - updates its world transform (spine world transform)
+     * - validates the attachments - to flag if the attachments have changed this state
+     * - transforms the attachments - to update the vertices of the attachments based on the new positions
+     * - update the slot attachments - to update the position, rotation, scale, and visibility of the attached containers
+     */
     applyState()
     {
         if (!this._stateChanged) return;
@@ -307,6 +292,7 @@ export class Spine extends Container implements View
         const { skeleton } = this;
 
         this.state.apply(skeleton);
+
         skeleton.updateWorldTransform();
 
         this.validateAttachments();
@@ -314,13 +300,6 @@ export class Spine extends Container implements View
         this.transformAttachments();
 
         this.updateSlotAttachments();
-    }
-
-    getCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment):AttachmentCacheData
-    {
-        const key = `${slot.data.index}-${attachment.name}`;
-
-        return this.attachmentCache[key] || this.initCachedData(slot, attachment);
     }
 
     private validateAttachments()
@@ -387,6 +366,47 @@ export class Spine extends Container implements View
         }
     }
 
+    /**
+     * ensure that attached containers map correctly to their slots
+     * along with their position, rotation, scale, and visibility.
+     */
+    private updateSlotAttachments()
+    {
+        for (let i = 0; i < this._slotAttachments.length; i++)
+        {
+            const slotAttachment = this._slotAttachments[i];
+
+            const { slot, container } = slotAttachment;
+
+            container.visible = this.skeleton.drawOrder.includes(slot);
+
+            if (container.visible)
+            {
+                const bone = slot.bone;
+
+                container.position.set(bone.worldX, bone.worldY);
+
+                container.scale.x = bone.getWorldScaleX();
+                container.scale.y = bone.getWorldScaleY();
+
+                const rotationX = bone.getWorldRotationX() * DEG_TO_RAD;
+                const rotationY = bone.getWorldRotationY() * DEG_TO_RAD;
+
+                container.rotation = Math.atan2(
+                    Math.sin(rotationX) + Math.sin(rotationY),
+                    Math.cos(rotationX) + Math.cos(rotationY)
+                );
+            }
+        }
+    }
+
+    getCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment):AttachmentCacheData
+    {
+        const key = `${slot.data.index}-${attachment.name}`;
+
+        return this.attachmentCacheData[key] || this.initCachedData(slot, attachment);
+    }
+
     private initCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment):AttachmentCacheData
     {
         const key = `${slot.data.index}-${attachment.name}`;
@@ -397,7 +417,7 @@ export class Spine extends Container implements View
         {
             vertices = new Float32Array(8);
 
-            this.attachmentCache[key] = {
+            this.attachmentCacheData[key] = {
                 vertices,
                 indices: [0, 1, 2, 0, 2, 3],
                 uvs: attachment.uvs as number[],
@@ -408,7 +428,7 @@ export class Spine extends Container implements View
         {
             vertices = new Float32Array(attachment.worldVerticesLength);
 
-            this.attachmentCache[key] = {
+            this.attachmentCacheData[key] = {
                 vertices,
                 indices: attachment.triangles,
                 uvs: attachment.uvs as number[],
@@ -416,7 +436,7 @@ export class Spine extends Container implements View
             };
         }
 
-        return this.attachmentCache[key];
+        return this.attachmentCacheData[key];
     }
 
     onViewUpdate()
@@ -606,6 +626,8 @@ export class Spine extends Container implements View
         this.skeleton = null as any;
         this.state = null as any;
         (this._slotAttachments as any) = null;
+        this._lastAttachments = null;
+        this.attachmentCacheData = null as any;
     }
 
     /** Whether or not to round the x/y position of the sprite. */
