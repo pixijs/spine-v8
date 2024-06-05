@@ -39,13 +39,15 @@ import {
     Ticker,
     View
 } from 'pixi.js';
-import { getSkeletonBounds } from './getSkeletonBounds';
 import { ISpineDebugRenderer } from './SpineDebugRenderer';
 import {
     AnimationState,
     AnimationStateData,
     AtlasAttachmentLoader,
+    Attachment,
     Bone,
+    MeshAttachment,
+    RegionAttachment,
     Skeleton,
     SkeletonBinary,
     SkeletonBounds,
@@ -83,6 +85,14 @@ export interface SpineEvents
     start: [trackEntry: TrackEntry];
 }
 
+export interface AttachmentCacheData
+{
+    vertices: Float32Array;
+    indices: number[];
+    uvs: number[];
+    color: { r: number; g: number; b: number; a: number };
+}
+
 export class Spine extends Container implements View
 {
     // Pixi properties
@@ -102,10 +112,17 @@ export class Spine extends Container implements View
 
     readonly _slotAttachments:{slot:Slot, container:Container}[] = [];
 
+    public spineAttachmentsDirty: boolean;
+    private _lastAttachments: Attachment[];
+
+    private _stateChanged: boolean;
+    private attachmentCache: Record<string, AttachmentCacheData> = {};
+
     public get debug(): ISpineDebugRenderer | undefined
     {
         return this._debug;
     }
+
     public set debug(value: ISpineDebugRenderer | undefined)
     {
         if (this._debug)
@@ -120,10 +137,12 @@ export class Spine extends Container implements View
     }
     private autoUpdateWarned = false;
     private _autoUpdate = true;
+
     public get autoUpdate(): boolean
     {
         return this._autoUpdate;
     }
+
     public set autoUpdate(value: boolean)
     {
         if (value)
@@ -135,6 +154,7 @@ export class Spine extends Container implements View
         {
             Ticker.shared.remove(this.internalUpdate, this);
         }
+
         this._autoUpdate = value;
     }
 
@@ -164,6 +184,7 @@ export class Spine extends Container implements View
             console.warn('You are calling update on a Spine instance that has autoUpdate set to true. This is probably not what you want.');
             this.autoUpdateWarned = true;
         }
+
         this.internalUpdate(0, dt);
     }
 
@@ -240,8 +261,16 @@ export class Spine extends Container implements View
     updateState(dt:number)
     {
         this.state.update(dt);
+
+        this._stateChanged = true;
+
         this._boundsDirty = true;
 
+        this.onViewUpdate();
+    }
+
+    updateSlotAttachments()
+    {
         for (let i = 0; i < this._slotAttachments.length; i++)
         {
             const slotAttachment = this._slotAttachments[i];
@@ -268,17 +297,133 @@ export class Spine extends Container implements View
                 );
             }
         }
+    }
 
-        this.onViewUpdate();
+    applyState()
+    {
+        if (!this._stateChanged) return;
+        this._stateChanged = false;
+
+        const { skeleton } = this;
+
+        this.state.apply(skeleton);
+        skeleton.updateWorldTransform();
+
+        this.validateAttachments();
+
+        this.transformAttachments();
+
+        this.updateSlotAttachments();
+    }
+
+    getCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment):AttachmentCacheData
+    {
+        const key = `${slot.data.index}-${attachment.name}`;
+
+        return this.attachmentCache[key] || this.initCachedData(slot, attachment);
+    }
+
+    private validateAttachments()
+    {
+        const currentDrawOrder = this.skeleton.drawOrder;
+
+        const lastAttachments = this._lastAttachments ||= [];
+
+        let index = 0;
+
+        let spineAttachmentsDirty = false;
+
+        for (let i = 0; i < currentDrawOrder.length; i++)
+        {
+            const slot = currentDrawOrder[i];
+            const attachment = slot.getAttachment();
+
+            if (attachment)
+            {
+                if (attachment !== lastAttachments[index])
+                {
+                    spineAttachmentsDirty = true;
+                    lastAttachments[index] = attachment;
+                }
+
+                index++;
+            }
+        }
+
+        if (index !== lastAttachments.length)
+        {
+            spineAttachmentsDirty = true;
+            lastAttachments.length = index;
+        }
+
+        this.spineAttachmentsDirty = spineAttachmentsDirty;
+    }
+
+    private transformAttachments()
+    {
+        const currentDrawOrder = this.skeleton.drawOrder;
+
+        for (let i = 0; i < currentDrawOrder.length; i++)
+        {
+            const slot = currentDrawOrder[i];
+
+            const attachment = slot.getAttachment();
+
+            if (attachment)
+            {
+                if (attachment instanceof MeshAttachment)
+                {
+                    const cacheData = this.getCachedData(slot, attachment);
+
+                    attachment.computeWorldVertices(slot, 0, attachment.worldVerticesLength, cacheData.vertices, 0, 2);
+                }
+                else if (attachment instanceof RegionAttachment)
+                {
+                    const cacheData = this.getCachedData(slot, attachment);
+
+                    attachment.computeWorldVertices(slot, cacheData.vertices, 0, 2);
+                }
+            }
+        }
+    }
+
+    private initCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment):AttachmentCacheData
+    {
+        const key = `${slot.data.index}-${attachment.name}`;
+
+        let vertices:Float32Array;
+
+        if (attachment instanceof RegionAttachment)
+        {
+            vertices = new Float32Array(8);
+
+            this.attachmentCache[key] = {
+                vertices,
+                indices: [0, 1, 2, 0, 2, 3],
+                uvs: attachment.uvs as number[],
+                color: slot.color
+            };
+        }
+        else
+        {
+            vertices = new Float32Array(attachment.worldVerticesLength);
+
+            this.attachmentCache[key] = {
+                vertices,
+                indices: attachment.triangles,
+                uvs: attachment.uvs as number[],
+                color: slot.color
+            };
+        }
+
+        return this.attachmentCache[key];
     }
 
     onViewUpdate()
     {
         // increment from the 12th bit!
         this._didChangeId += 1 << 12;
-        this._didSpineUpdate = true;
 
-        this._didSpineUpdate = true;
         this._boundsDirty = true;
 
         if (this.didViewUpdate) return;
@@ -361,6 +506,27 @@ export class Spine extends Container implements View
         }
     }
 
+    /**
+     * Returns a container attached to a slot, or undefined if no container is attached.
+     *
+     * @param slot - The slot id or slot to get the attachment from
+     * @returns - The container attached to the slot
+     */
+    getSlotAttachment(slot:string | Slot)
+    {
+        if (typeof slot === 'string')
+        {
+            slot = this.skeleton.findSlot(slot) as Slot;
+        }
+
+        if (!slot)
+        {
+            throw new Error(`Slot ${slot} not found`);
+        }
+
+        return this._slotAttachments.find((mapping) => mapping.slot === slot)?.container;
+    }
+
     updateBounds()
     {
         this._boundsDirty = false;
@@ -373,10 +539,26 @@ export class Spine extends Container implements View
 
         if (skeletonBounds.minX === Infinity)
         {
-            this.state.apply(this.skeleton);
+            this.applyState();
 
-            // now region bounding attachments..
-            getSkeletonBounds(this.skeleton, this._bounds);
+            const drawOrder = this.skeleton.drawOrder;
+            const bounds = this._bounds;
+
+            bounds.clear();
+
+            for (let i = 0; i < drawOrder.length; i++)
+            {
+                const slot = drawOrder[i];
+
+                const attachment = slot.getAttachment();
+
+                if (attachment && attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
+                {
+                    const cacheData = this.getCachedData(slot, attachment);
+
+                    bounds.addVertexData(cacheData.vertices, 0, cacheData.vertices.length);
+                }
+            }
         }
         else
         {
@@ -417,6 +599,7 @@ export class Spine extends Container implements View
     public override destroy(options: DestroyOptions = false)
     {
         super.destroy(options);
+
         Ticker.shared.remove(this.internalUpdate, this);
         this.state.clearListeners();
         this.debug = undefined;
