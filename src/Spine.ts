@@ -552,7 +552,7 @@ export class Spine extends Container implements View
 
                 const attachment = slot.getAttachment();
 
-                if (attachment && attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
+                if (attachment && (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment))
                 {
                     const cacheData = this.getCachedData(slot, attachment);
 

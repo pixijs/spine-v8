@@ -28,7 +28,6 @@
  *****************************************************************************/
 
 import {
-    BigPool,
     collectAllRenderables,
     extensions, ExtensionType,
     InstructionSet,
@@ -36,17 +35,9 @@ import {
     type RenderPipe,
     Texture
 } from 'pixi.js';
-import { BatchableClippedSpineSlot } from './BatchableClippedSpineSlot';
 import { BatchableSpineSlot } from './BatchableSpineSlot';
 import { Spine } from './Spine';
-import { ClippingAttachment, Color, MeshAttachment, RegionAttachment, SkeletonClipping } from '@esotericsoftware/spine-core';
-
-import type { Bone } from '@esotericsoftware/spine-core';
-
-const QUAD_TRIANGLES = [0, 1, 2, 2, 3, 0];
-const QUAD_VERTS = new Float32Array(8);
-const lightColor = new Color();
-const darkColor = new Color();
+import { ClippingAttachment, MeshAttachment, RegionAttachment, SkeletonClipping } from '@esotericsoftware/spine-core';
 
 const clipper = new SkeletonClipping();
 
