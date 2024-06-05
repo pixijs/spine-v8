@@ -248,20 +248,25 @@ export class Spine extends Container implements View
 
             const { slot, container } = slotAttachment;
 
-            const bone = slot.bone;
+            container.visible = this.skeleton.drawOrder.includes(slot);
 
-            container.position.set(bone.worldX, bone.worldY);
+            if (container.visible)
+            {
+                const bone = slot.bone;
 
-            container.scale.x = bone.getWorldScaleX();
-            container.scale.y = bone.getWorldScaleY();
+                container.position.set(bone.worldX, bone.worldY);
 
-            const rotationX = bone.getWorldRotationX() * DEG_TO_RAD;
-            const rotationY = bone.getWorldRotationY() * DEG_TO_RAD;
+                container.scale.x = bone.getWorldScaleX();
+                container.scale.y = bone.getWorldScaleY();
 
-            container.rotation = Math.atan2(
-                Math.sin(rotationX) + Math.sin(rotationY),
-                Math.cos(rotationX) + Math.cos(rotationY)
-            );
+                const rotationX = bone.getWorldRotationX() * DEG_TO_RAD;
+                const rotationY = bone.getWorldRotationY() * DEG_TO_RAD;
+
+                container.rotation = Math.atan2(
+                    Math.sin(rotationX) + Math.sin(rotationY),
+                    Math.cos(rotationX) + Math.cos(rotationY)
+                );
+            }
         }
 
         this.onViewUpdate();

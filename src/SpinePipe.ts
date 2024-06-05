@@ -27,7 +27,15 @@
  * SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-import { BigPool, collectAllRenderables, extensions, ExtensionType, type Renderer, type RenderPipe, Texture } from 'pixi.js';
+import {
+    BigPool,
+    collectAllRenderables,
+    extensions, ExtensionType,
+    InstructionSet,
+    type Renderer,
+    type RenderPipe,
+    Texture
+} from 'pixi.js';
 import { BatchableClippedSpineSlot } from './BatchableClippedSpineSlot';
 import { BatchableSpineSlot } from './BatchableSpineSlot';
 import { Spine } from './Spine';
@@ -81,7 +89,7 @@ export class SpinePipe implements RenderPipe<Spine>
         this._returnActiveBatches();
     }
 
-    addRenderable(spine: Spine, instructionSet)
+    addRenderable(spine: Spine, instructionSet:InstructionSet)
     {
         const batcher = this.renderer.renderPipes.batch;
 
