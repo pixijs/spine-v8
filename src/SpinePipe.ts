@@ -98,8 +98,8 @@ export class SpinePipe implements RenderPipe<Spine>
 
             if (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
             {
-                const batchableSpineSlot = gpuSpine.slotBatches[attachment.name] ||= new BatchableSpineSlot();
                 const cacheData = spine.getCachedData(slot, attachment);
+                const batchableSpineSlot = gpuSpine.slotBatches[cacheData.id] ||= new BatchableSpineSlot();
 
                 if (!cacheData.clipped || (cacheData.clipped && cacheData.clippedData.vertices.length > 0))
                 {
@@ -115,7 +115,7 @@ export class SpinePipe implements RenderPipe<Spine>
                 }
             }
 
-            const containerAttachment = spine._slotsObject.find((mapping) => mapping.slot === slot);
+            const containerAttachment = spine._slotsObject[slot.data.name];
 
             if (containerAttachment)
             {
@@ -146,7 +146,7 @@ export class SpinePipe implements RenderPipe<Spine>
 
             if (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
             {
-                const batchableSpineSlot = gpuSpine.slotBatches[attachment.name];
+                const batchableSpineSlot = gpuSpine.slotBatches[spine.getCachedData(slot, attachment).id];
 
                 batchableSpineSlot.batcher.updateElement(batchableSpineSlot);
             }

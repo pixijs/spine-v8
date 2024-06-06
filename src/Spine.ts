@@ -94,6 +94,7 @@ export interface SpineEvents
 
 export interface AttachmentCacheData
 {
+    id: string;
     clipped: boolean;
     vertices: Float32Array;
     uvs: Float32Array;
@@ -125,7 +126,8 @@ export class Spine extends Container implements View
     public skeletonBounds: SkeletonBounds;
     private _debug?: ISpineDebugRenderer | undefined = undefined;
 
-    readonly _slotsObject: { slot: Slot; container: Container }[] = [];
+    readonly _slotsObject: Record<string, {slot:Slot, container:Container}> = Object.create(null);
+
     private getSlotFromRef(slotRef: number | string | Slot): Slot
     {
         let slot: Slot | null;
@@ -503,9 +505,11 @@ export class Spine extends Container implements View
      */
     private updateSlotAttachments()
     {
-        for (let i = 0; i < this._slotsObject.length; i++)
+        for (const i in this._slotsObject)
         {
             const slotAttachment = this._slotsObject[i];
+
+            if (!slotAttachment) continue;
 
             const { slot, container } = slotAttachment;
 
@@ -549,6 +553,7 @@ export class Spine extends Container implements View
             vertices = new Float32Array(8);
 
             this.attachmentCacheData[key] = {
+                id: key,
                 vertices,
                 clipped: false,
                 indices: [0, 1, 2, 0, 2, 3],
@@ -561,6 +566,7 @@ export class Spine extends Container implements View
             vertices = new Float32Array(attachment.worldVerticesLength);
 
             this.attachmentCacheData[key] = {
+                id: key,
                 vertices,
                 clipped: false,
                 indices: attachment.triangles,
@@ -599,22 +605,38 @@ export class Spine extends Container implements View
      * @param container - The container to attach to the slot
      * @param slotRef - The slot id or  slot to attach to
      */
-    addSlotObject(slotRef: number | string | Slot, container: Container)
+    addSlotObject(slot: number | string | Slot, container: Container)
     {
-        this.removeSlotObject(slotRef, container);
+        slot = this.getSlotFromRef(slot);
+
+        // need to check in on the container too...
+        for (const i in this._slotsObject)
+        {
+            if (this._slotsObject[i]?.container === container)
+            {
+                this.removeSlotObject(this._slotsObject[i].slot);
+            }
+        }
+
+        this.removeSlotObject(slot);
 
         container.includeInBuild = false;
-
-        slotRef = this.getSlotFromRef(slotRef);
 
         // TODO only add once??
         this.addChild(container);
 
         // TODO search for copies... - one container - to one bone!
-        this._slotsObject.push({
-            slot: slotRef,
+        this._slotsObject[slot.data.name] = {
             container,
-        });
+            slot
+        };
+
+        const renderGroup = this.renderGroup || this.parentRenderGroup;
+
+        if (renderGroup)
+        {
+            renderGroup.structureDidChange = true;
+        }
     }
 
     /**
@@ -623,24 +645,20 @@ export class Spine extends Container implements View
      * @param container - The container to detach from the slot
      * @param slot - The slot id or slot to detach from
      */
-    removeSlotObject(slot: number | string | Slot, container: Container)
+    removeSlotObject(slot: number | string | Slot)
     {
-        container.includeInBuild = true;
-
         slot = this.getSlotFromRef(slot);
 
-        this.removeChild(container);
+        const container = this._slotsObject[slot.data.name]?.container;
 
-        for (let i = 0; i < this._slotsObject.length; i++)
+        if (container)
         {
-            const mapping = this._slotsObject[i];
+            this.removeChild(container);
 
-            if (mapping.slot === slot && mapping.container === container)
-            {
-                this._slotsObject.splice(i, 1);
-                break;
-            }
+            container.includeInBuild = true;
         }
+
+        this._slotsObject[slot.data.name] = null;
     }
 
     /**
@@ -649,11 +667,11 @@ export class Spine extends Container implements View
      * @param slotRef - The slot id or slot to get the attachment from
      * @returns - The container attached to the slot
      */
-    getSlotObject(slotRef: number | string | Slot)
+    getSlotObject(slot: number | string | Slot)
     {
-        slotRef = this.getSlotFromRef(slotRef);
+        slot = this.getSlotFromRef(slot);
 
-        return this._slotsObject.find((mapping) => mapping.slot === slotRef)?.container;
+        return this._slotsObject[slot.data.name].container;
     }
 
     updateBounds()
