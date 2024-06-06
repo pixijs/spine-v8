@@ -2,7 +2,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>spine-pixi</title>
-    <script src="https://cdn.jsdelivr.net/npm/pixi.js8.0.0-rc.3/dist/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@latest/dist/pixi.min.js"></script>
     <script src="../dist/spine-pixi.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tweakpane@3.1.9/dist/tweakpane.min.js"></script>
     <link rel="stylesheet" href="./index.css">
@@ -35,8 +35,8 @@
         document.body.appendChild(app.view);
 
         // Pre-load the skeleton data and atlas. You can also load .json skeleton data.
-        PIXI.Assets.add("spineboyData", "./assets/spineboy-pro.skel");
-        PIXI.Assets.add("spineboyAtlas", "./assets/spineboy-pma.atlas");
+        PIXI.Assets.add({alias: "spineboyData", src: "./assets/spineboy-pro.skel" });
+        PIXI.Assets.add({alias: "spineboyAtlas", src: "./assets/spineboy-pma.atlas" });
         await PIXI.Assets.load(["spineboyData", "spineboyAtlas"]);
 
         // Create the Spine display object
