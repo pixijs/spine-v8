@@ -204,6 +204,8 @@ export class Spine extends Container implements View
         this.skeleton = new Skeleton(skeletonData);
         this.state = new AnimationState(new AnimationStateData(skeletonData));
         this.autoUpdate = options?.autoUpdate ?? true;
+
+        this._updateState(0);
     }
 
     public update(dt: number): void
