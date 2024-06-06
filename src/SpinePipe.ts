@@ -31,7 +31,7 @@ import { BigPool, extensions, ExtensionType, type Renderer, type RenderPipe, Tex
 import { BatchableClippedSpineSlot } from './BatchableClippedSpineSlot';
 import { BatchableSpineSlot } from './BatchableSpineSlot';
 import { Spine } from './Spine';
-import { ClippingAttachment, Color, MeshAttachment, RegionAttachment, SkeletonClipping } from '@esotericsoftware/spine-core';
+import { ClippingAttachment, Color, MeshAttachment, Physics, RegionAttachment, SkeletonClipping } from '@esotericsoftware/spine-core';
 
 import type { Bone } from '@esotericsoftware/spine-core';
 
@@ -92,7 +92,7 @@ export class SpinePipe implements RenderPipe<Spine>
         rootBone.rotation = 0;
 
         spine.state.apply(spine.skeleton);
-        spine.skeleton.updateWorldTransform();
+        spine.skeleton.updateWorldTransform(Physics.update);
 
         const drawOrder = spine.skeleton.drawOrder;
 
