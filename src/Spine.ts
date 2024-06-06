@@ -639,22 +639,39 @@ export class Spine extends Container implements View
      * Removes a PixiJS container from the slot it is attached to.
      *
      * @param container - The container to detach from the slot
-     * @param slot - The slot id or slot to detach from
+     * @param slotOrContainer - The container, slot id or slot to detach from
      */
-    removeSlotObject(slot: number | string | Slot)
+    removeSlotObject(slotOrContainer: number | string | Slot | Container)
     {
-        slot = this.getSlotFromRef(slot);
+        let containerToRemove: Container | undefined;
 
-        const container = this._slotsObject[slot.data.name]?.container;
-
-        if (container)
+        if (slotOrContainer instanceof Container)
         {
-            this.removeChild(container);
+            for (const i in this._slotsObject)
+            {
+                if (this._slotsObject[i]?.container === slotOrContainer)
+                {
+                    this._slotsObject[i] = null;
 
-            container.includeInBuild = true;
+                    containerToRemove = slotOrContainer;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            const slot = this.getSlotFromRef(slotOrContainer);
+
+            containerToRemove = this._slotsObject[slot.data.name]?.container;
+            this._slotsObject[slot.data.name] = null;
         }
 
-        this._slotsObject[slot.data.name] = null;
+        if (containerToRemove)
+        {
+            this.removeChild(containerToRemove);
+
+            containerToRemove.includeInBuild = true;
+        }
     }
 
     /**
