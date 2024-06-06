@@ -27,12 +27,9 @@
  * SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
-import { Spine } from './Spine';
-import { MeshAttachment, RegionAttachment, Slot } from '@esotericsoftware/spine-core';
+import { AttachmentCacheData, Spine } from './Spine';
 
-import type { Batch, BatchableObject, Batcher, IndexBufferArray, Texture } from 'pixi.js';
-
-const QUAD_TRIANGLES = [0, 1, 2, 2, 3, 0];
+import type { Batch, BatchableObject, Batcher, BLEND_MODES, IndexBufferArray, Texture } from 'pixi.js';
 
 export class BatchableSpineSlot implements BatchableObject
 {
@@ -44,43 +41,55 @@ export class BatchableSpineSlot implements BatchableObject
     batch: Batch;
     renderable: Spine;
 
-    slot:Slot;
+    vertices: Float32Array;
+    indices: number[] | Uint16Array;
+    uvs: Float32Array;
+
     indexSize: number;
     vertexSize: number;
 
     roundPixels: 0 | 1;
+    data: AttachmentCacheData;
+    blendMode: BLEND_MODES;
 
-    get blendMode() { return this.renderable.groupBlendMode; }
-
-    reset()
+    setData(
+        renderable:Spine,
+        data:AttachmentCacheData,
+        texture:Texture,
+        blendMode:BLEND_MODES,
+        roundPixels: 0 | 1)
     {
-        this.renderable = null as any;
-        this.texture = null as any;
-        this.batcher = null as any;
-        this.batch = null as any;
-    }
+        this.renderable = renderable;
+        this.data = data;
 
-    setSlot(slot:Slot)
-    {
-        this.slot = slot;
-
-        const attachment = slot.getAttachment();
-
-        if (attachment instanceof RegionAttachment)
+        if (data.clipped)
         {
-            this.vertexSize = 4;
-            this.indexSize = 6;
+            const clippedData = data.clippedData;
+
+            this.indexSize = clippedData.indicesCount;
+            this.vertexSize = clippedData.vertexCount;
+            this.vertices = clippedData.vertices;
+            this.indices = clippedData.indices;
+            this.uvs = clippedData.uvs;
         }
-        else if (attachment instanceof MeshAttachment)
+        else
         {
-            this.vertexSize = attachment.worldVerticesLength / 2;
-            this.indexSize = attachment.triangles.length;
+            this.indexSize = data.indices.length;
+            this.vertexSize = data.vertices.length / 2;
+            this.vertices = data.vertices;
+            this.indices = data.indices;
+            this.uvs = data.uvs;
         }
+
+        this.texture = texture;
+        this.roundPixels = roundPixels;
+
+        this.blendMode = blendMode;
     }
 
     packIndex(indexBuffer: IndexBufferArray, index: number, indicesOffset: number)
     {
-        const indices = (this.slot.getAttachment() as MeshAttachment).triangles ?? QUAD_TRIANGLES;
+        const indices = this.indices;
 
         for (let i = 0; i < indices.length; i++)
         {
@@ -95,24 +104,12 @@ export class BatchableSpineSlot implements BatchableObject
         textureId: number
     )
     {
-        const slot = this.slot;
-        const attachment = slot.getAttachment() as MeshAttachment | RegionAttachment;
+        const { uvs, vertices, vertexSize } = this;
 
-        if (attachment instanceof MeshAttachment)
-        {
-            attachment.computeWorldVertices(slot, 0, attachment.worldVerticesLength, float32View, index, 6);
-        }
-        else if (attachment instanceof RegionAttachment)
-        {
-            attachment.computeWorldVertices(slot, float32View, index, 6);
-        }
+        const slotColor = this.data.color;
 
-        const vertexSize = this.vertexSize;
-
-        const parentColor:number = this.renderable.groupColor; // BGR
+        const parentColor:number = this.renderable.groupColor;
         const parentAlpha:number = this.renderable.groupAlpha;
-
-        const slotColor: {r: number, g:number, b: number, a: number} = slot.color;
 
         let abgr:number;
 
@@ -135,8 +132,6 @@ export class BatchableSpineSlot implements BatchableObject
             abgr = ((mixedA) << 24) | ((slotColor.b * 255) << 16) | ((slotColor.g * 255) << 8) | (slotColor.r * 255);
         }
 
-        const uvs = attachment.uvs;
-
         const matrix = this.renderable.groupTransform;
 
         const a = matrix.a;
@@ -150,10 +145,8 @@ export class BatchableSpineSlot implements BatchableObject
 
         for (let i = 0; i < vertexSize; i++)
         {
-            // index++;
-            // float32View[index++] *= -1;
-            const x = float32View[index];
-            const y = float32View[index + 1];
+            const x = vertices[i * 2];
+            const y = vertices[(i * 2) + 1];
 
             float32View[index++] = (a * x) + (c * y) + tx;
             float32View[index++] = (b * x) + (d * y) + ty;
