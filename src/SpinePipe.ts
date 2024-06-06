@@ -72,7 +72,7 @@ export class SpinePipe implements RenderPipe<Spine>
 
     validateRenderable(spine: Spine): boolean
     {
-        spine.applyState();
+        spine._applyState();
         // loop through and see if the mesh lengths have changed..
 
         return spine.spineAttachmentsDirty;
@@ -88,7 +88,7 @@ export class SpinePipe implements RenderPipe<Spine>
 
         const roundPixels = (this.renderer._roundPixels | spine._roundPixels) as 0 | 1;
 
-        spine.applyState();
+        spine._applyState();
 
         for (let i = 0, n = drawOrder.length; i < n; i++)
         {
@@ -115,7 +115,7 @@ export class SpinePipe implements RenderPipe<Spine>
                 }
             }
 
-            const containerAttachment = spine._slotAttachments.find((mapping) => mapping.slot === slot);
+            const containerAttachment = spine._slotsObject.find((mapping) => mapping.slot === slot);
 
             if (containerAttachment)
             {
@@ -135,7 +135,7 @@ export class SpinePipe implements RenderPipe<Spine>
         // we assume that spine will always change its verts size..
         const gpuSpine = this.gpuSpineData[spine.uid];
 
-        spine.applyState();
+        spine._applyState();
 
         const drawOrder = spine.skeleton.drawOrder;
 
