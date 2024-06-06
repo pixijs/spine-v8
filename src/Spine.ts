@@ -387,7 +387,7 @@ export class Spine extends Container implements View
             {
                 if (attachment instanceof MeshAttachment || attachment instanceof RegionAttachment)
                 {
-                    const cacheData = this.getCachedData(slot, attachment);
+                    const cacheData = this._getCachedData(slot, attachment);
 
                     if (attachment instanceof RegionAttachment)
                     {
@@ -531,7 +531,8 @@ export class Spine extends Container implements View
         }
     }
 
-    getCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment): AttachmentCacheData
+    /** @internal */
+    _getCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment): AttachmentCacheData
     {
         const key = `${slot.data.index}-${attachment.name}`;
 
@@ -697,7 +698,7 @@ export class Spine extends Container implements View
 
                 if (attachment && (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment))
                 {
-                    const cacheData = this.getCachedData(slot, attachment);
+                    const cacheData = this._getCachedData(slot, attachment);
 
                     bounds.addVertexData(cacheData.vertices, 0, cacheData.vertices.length);
                 }

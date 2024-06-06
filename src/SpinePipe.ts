@@ -98,7 +98,7 @@ export class SpinePipe implements RenderPipe<Spine>
 
             if (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
             {
-                const cacheData = spine.getCachedData(slot, attachment);
+                const cacheData = spine._getCachedData(slot, attachment);
                 const batchableSpineSlot = gpuSpine.slotBatches[cacheData.id] ||= new BatchableSpineSlot();
 
                 if (!cacheData.clipped || (cacheData.clipped && cacheData.clippedData.vertices.length > 0))
@@ -146,7 +146,7 @@ export class SpinePipe implements RenderPipe<Spine>
 
             if (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
             {
-                const batchableSpineSlot = gpuSpine.slotBatches[spine.getCachedData(slot, attachment).id];
+                const batchableSpineSlot = gpuSpine.slotBatches[spine._getCachedData(slot, attachment).id];
 
                 batchableSpineSlot.batcher.updateElement(batchableSpineSlot);
             }
