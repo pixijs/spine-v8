@@ -37,9 +37,16 @@ import {
 } from 'pixi.js';
 import { BatchableSpineSlot } from './BatchableSpineSlot';
 import { Spine } from './Spine';
-import { ClippingAttachment, MeshAttachment, RegionAttachment, SkeletonClipping } from '@esotericsoftware/spine-core';
+import { MeshAttachment, RegionAttachment, SkeletonClipping } from '@esotericsoftware/spine-core';
 
 const clipper = new SkeletonClipping();
+
+const spineBlendModeMap = {
+    0: 'normal',
+    1: 'add',
+    2: 'multiply',
+    3: 'screen'
+};
 
 // eslint-disable-next-line max-len
 export class SpinePipe implements RenderPipe<Spine>
@@ -87,27 +94,25 @@ export class SpinePipe implements RenderPipe<Spine>
         {
             const slot = drawOrder[i];
             const attachment = slot.getAttachment();
+            const blendMode = spineBlendModeMap[slot.data.blendMode];
 
             if (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
             {
                 const batchableSpineSlot = gpuSpine.slotBatches[attachment.name] ||= new BatchableSpineSlot();
+                const cacheData = spine.getCachedData(slot, attachment);
 
-                batchableSpineSlot.setData(
-                    spine,
-                    spine.getCachedData(slot, attachment),
-                    (attachment.region?.texture.texture) || Texture.EMPTY,
-                    roundPixels
-                );
+                if (!cacheData.clipped || (cacheData.clipped && cacheData.clippedData.vertices.length > 0))
+                {
+                    batchableSpineSlot.setData(
+                        spine,
+                        cacheData,
+                        (attachment.region?.texture.texture) || Texture.EMPTY,
+                        blendMode,
+                        roundPixels
+                    );
 
-                batcher.addToBatch(batchableSpineSlot);
-            }
-            else if (attachment instanceof ClippingAttachment)
-            {
-                clipper.clipStart(slot, attachment);
-            }
-            else
-            {
-                clipper.clipEndWithSlot(slot);
+                    batcher.addToBatch(batchableSpineSlot);
+                }
             }
 
             const containerAttachment = spine._slotAttachments.find((mapping) => mapping.slot === slot);

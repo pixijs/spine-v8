@@ -46,11 +46,14 @@ import {
     AtlasAttachmentLoader,
     Attachment,
     Bone,
+    ClippingAttachment,
+    Color,
     MeshAttachment,
     RegionAttachment,
     Skeleton,
     SkeletonBinary,
     SkeletonBounds,
+    SkeletonClipping,
     SkeletonData,
     SkeletonJson,
     Slot,
@@ -66,8 +69,12 @@ export type SpineFromOptions = {
 };
 
 const vectorAux = new Vector2();
+const lightColor = new Color();
+const darkColor = new Color();
 
 Skeleton.yDown = true;
+
+const clipper = new SkeletonClipping();
 
 export interface SpineOptions extends ContainerOptions
 {
@@ -87,10 +94,18 @@ export interface SpineEvents
 
 export interface AttachmentCacheData
 {
+    clipped: boolean;
     vertices: Float32Array;
+    uvs: Float32Array;
     indices: number[];
-    uvs: number[];
     color: { r: number; g: number; b: number; a: number };
+    clippedData?: {
+        vertices: Float32Array;
+        uvs: Float32Array;
+        indices: Uint16Array;
+        vertexCount: number,
+        indicesCount: number,
+    };
 }
 
 export class Spine extends Container implements View
@@ -350,22 +365,114 @@ export class Spine extends Container implements View
 
             if (attachment)
             {
-                if (attachment instanceof MeshAttachment)
+                if (attachment instanceof MeshAttachment || attachment instanceof RegionAttachment)
                 {
                     const cacheData = this.getCachedData(slot, attachment);
 
-                    attachment.computeWorldVertices(slot, 0, attachment.worldVerticesLength, cacheData.vertices, 0, 2);
+                    if (attachment instanceof RegionAttachment)
+                    {
+                        attachment.computeWorldVertices(slot, cacheData.vertices, 0, 2);
+                    }
+                    else
+                    {
+                        attachment.computeWorldVertices(slot, 0, attachment.worldVerticesLength, cacheData.vertices, 0, 2);
+                    }
+
+                    cacheData.clipped = false;
+
+                    if (clipper.isClipping())
+                    {
+                        this.updateClippingData(cacheData);
+                    }
                 }
-                else if (attachment instanceof RegionAttachment)
+                else if (attachment instanceof ClippingAttachment)
                 {
-                    const cacheData = this.getCachedData(slot, attachment);
-
-                    attachment.computeWorldVertices(slot, cacheData.vertices, 0, 2);
+                    clipper.clipStart(slot, attachment);
+                }
+                else
+                {
+                    clipper.clipEndWithSlot(slot);
                 }
             }
         }
+
+        clipper.clipEnd();
     }
 
+    private updateClippingData(cacheData: AttachmentCacheData)
+    {
+        cacheData.clipped = true;
+
+        clipper.clipTriangles(
+            cacheData.vertices,
+            cacheData.vertices.length,
+            cacheData.indices,
+            cacheData.indices.length,
+            cacheData.uvs,
+            lightColor,
+            darkColor,
+            false,
+        );
+
+        const { clippedVertices, clippedTriangles } = clipper;
+
+        const verticesCount = clippedVertices.length / 8;
+        const indicesCount = clippedTriangles.length;
+
+        if (!cacheData.clippedData)
+        {
+            cacheData.clippedData = {
+                vertices: new Float32Array(verticesCount * 2),
+                uvs: new Float32Array(verticesCount * 2),
+                vertexCount: verticesCount,
+                indices: new Uint16Array(indicesCount),
+                indicesCount,
+            };
+
+            this.spineAttachmentsDirty = true;
+        }
+
+        const clippedData = cacheData.clippedData;
+
+        const sizeChange = (clippedData.vertexCount !== verticesCount || indicesCount !== clippedData.indicesCount);
+
+        if (sizeChange)
+        {
+            this.spineAttachmentsDirty = true;
+
+            if (clippedData.vertexCount < verticesCount)
+            {
+                // buffer reuse!
+                clippedData.vertices = new Float32Array(verticesCount * 2);
+                clippedData.uvs = new Float32Array(verticesCount * 2);
+            }
+
+            if (clippedData.indices.length < indicesCount)
+            {
+                clippedData.indices = new Uint16Array(indicesCount);
+            }
+        }
+
+        const { vertices, uvs, indices } = clippedData;
+
+        for (let i = 0; i < verticesCount; i++)
+        {
+            vertices[i * 2] = clippedVertices[i * 8];
+            vertices[(i * 2) + 1] = clippedVertices[(i * 8) + 1];
+
+            uvs[i * 2] = clippedVertices[(i * 8) + 6];
+            uvs[(i * 2) + 1] = clippedVertices[(i * 8) + 7];
+        }
+
+        clippedData.vertexCount = verticesCount;
+
+        for (let i = 0; i < indices.length; i++)
+        {
+            indices[i] = clippedTriangles[i];
+        }
+
+        clippedData.indicesCount = indicesCount;
+    }
     /**
      * ensure that attached containers map correctly to their slots
      * along with their position, rotation, scale, and visibility.
@@ -419,8 +526,9 @@ export class Spine extends Container implements View
 
             this.attachmentCacheData[key] = {
                 vertices,
+                clipped: false,
                 indices: [0, 1, 2, 0, 2, 3],
-                uvs: attachment.uvs as number[],
+                uvs: attachment.uvs as Float32Array,
                 color: slot.color
             };
         }
@@ -430,8 +538,9 @@ export class Spine extends Container implements View
 
             this.attachmentCacheData[key] = {
                 vertices,
+                clipped: false,
                 indices: attachment.triangles,
-                uvs: attachment.uvs as number[],
+                uvs: attachment.uvs as Float32Array,
                 color: slot.color
             };
         }

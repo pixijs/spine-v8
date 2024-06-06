@@ -28,9 +28,8 @@
  *****************************************************************************/
 
 import { AttachmentCacheData, Spine } from './Spine';
-import { Slot } from '@esotericsoftware/spine-core';
 
-import type { Batch, BatchableObject, Batcher, IndexBufferArray, Texture } from 'pixi.js';
+import type { Batch, BatchableObject, Batcher, BLEND_MODES, IndexBufferArray, Texture } from 'pixi.js';
 
 export class BatchableSpineSlot implements BatchableObject
 {
@@ -42,42 +41,55 @@ export class BatchableSpineSlot implements BatchableObject
     batch: Batch;
     renderable: Spine;
 
-    slot:Slot;
+    vertices: Float32Array;
+    indices: number[] | Uint16Array;
+    uvs: Float32Array;
+
     indexSize: number;
     vertexSize: number;
 
     roundPixels: 0 | 1;
     data: AttachmentCacheData;
-
-    get blendMode() { return this.renderable.groupBlendMode; }
-
-    reset()
-    {
-        this.renderable = null as any;
-        this.texture = null as any;
-        this.batcher = null as any;
-        this.batch = null as any;
-    }
+    blendMode: BLEND_MODES;
 
     setData(
         renderable:Spine,
         data:AttachmentCacheData,
         texture:Texture,
+        blendMode:BLEND_MODES,
         roundPixels: 0 | 1)
     {
         this.renderable = renderable;
         this.data = data;
 
-        this.vertexSize = data.vertices.length / 2;
-        this.indexSize = data.indices.length;
+        if (data.clipped)
+        {
+            const clippedData = data.clippedData;
+
+            this.indexSize = clippedData.indicesCount;
+            this.vertexSize = clippedData.vertexCount;
+            this.vertices = clippedData.vertices;
+            this.indices = clippedData.indices;
+            this.uvs = clippedData.uvs;
+        }
+        else
+        {
+            this.indexSize = data.indices.length;
+            this.vertexSize = data.vertices.length / 2;
+            this.vertices = data.vertices;
+            this.indices = data.indices;
+            this.uvs = data.uvs;
+        }
 
         this.texture = texture;
         this.roundPixels = roundPixels;
+
+        this.blendMode = blendMode;
     }
 
     packIndex(indexBuffer: IndexBufferArray, index: number, indicesOffset: number)
     {
-        const indices = this.data.indices;
+        const indices = this.indices;
 
         for (let i = 0; i < indices.length; i++)
         {
@@ -92,9 +104,9 @@ export class BatchableSpineSlot implements BatchableObject
         textureId: number
     )
     {
-        const vertexSize = this.vertexSize;
+        const { uvs, vertices, vertexSize } = this;
 
-        const { uvs, vertices, color: slotColor } = this.data;
+        const slotColor = this.data.color;
 
         const parentColor:number = this.renderable.groupColor;
         const parentAlpha:number = this.renderable.groupAlpha;
