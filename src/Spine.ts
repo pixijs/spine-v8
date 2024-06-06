@@ -49,6 +49,7 @@ import {
     ClippingAttachment,
     Color,
     MeshAttachment,
+    Physics,
     RegionAttachment,
     Skeleton,
     SkeletonBinary,
@@ -328,7 +329,7 @@ export class Spine extends Container implements View
 
         this.state.apply(skeleton);
 
-        skeleton.updateWorldTransform();
+        skeleton.updateWorldTransform(Physics.update);
 
         this.validateAttachments();
 
