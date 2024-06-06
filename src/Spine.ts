@@ -524,13 +524,7 @@ export class Spine extends Container implements View
                 container.scale.x = bone.getWorldScaleX();
                 container.scale.y = bone.getWorldScaleY();
 
-                const rotationX = bone.getWorldRotationX() * DEG_TO_RAD;
-                const rotationY = bone.getWorldRotationY() * DEG_TO_RAD;
-
-                container.rotation = Math.atan2(
-                    Math.sin(rotationX) + Math.sin(rotationY),
-                    Math.cos(rotationX) + Math.cos(rotationY),
-                );
+                container.rotation = bone.getWorldRotationX() * DEG_TO_RAD;
             }
         }
     }
