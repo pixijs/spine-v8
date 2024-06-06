@@ -37,7 +37,7 @@ import {
     DestroyOptions,
     PointData,
     Ticker,
-    View
+    View,
 } from 'pixi.js';
 import { ISpineDebugRenderer } from './SpineDebugRenderer';
 import {
@@ -59,7 +59,7 @@ import {
     Slot,
     type TextureAtlas,
     TrackEntry,
-    Vector2
+    Vector2,
 } from '@esotericsoftware/spine-core';
 
 export type SpineFromOptions = {
@@ -94,6 +94,7 @@ export interface SpineEvents
 
 export interface AttachmentCacheData
 {
+    id: string;
     clipped: boolean;
     vertices: Float32Array;
     uvs: Float32Array;
@@ -103,8 +104,8 @@ export interface AttachmentCacheData
         vertices: Float32Array;
         uvs: Float32Array;
         indices: Uint16Array;
-        vertexCount: number,
-        indicesCount: number,
+        vertexCount: number;
+        indicesCount: number;
     };
 }
 
@@ -117,7 +118,7 @@ export class Spine extends Container implements View
     public _didSpineUpdate = false;
     public _boundsDirty = true;
     public _roundPixels: 0 | 1;
-    private _bounds:Bounds = new Bounds();
+    private _bounds: Bounds = new Bounds();
 
     // Spine properties
     public skeleton: Skeleton;
@@ -125,7 +126,20 @@ export class Spine extends Container implements View
     public skeletonBounds: SkeletonBounds;
     private _debug?: ISpineDebugRenderer | undefined = undefined;
 
-    readonly _slotAttachments:{slot:Slot, container:Container}[] = [];
+    readonly _slotsObject: Record<string, {slot:Slot, container:Container}> = Object.create(null);
+
+    private getSlotFromRef(slotRef: number | string | Slot): Slot
+    {
+        let slot: Slot | null;
+
+        if (typeof slotRef === 'number') slot = this.skeleton.slots[slotRef];
+        else if (typeof slotRef === 'string') slot = this.skeleton.findSlot(slotRef);
+        else slot = slotRef;
+
+        if (!slot) throw new Error(`No slot found with the given slot reference: ${slotRef}`);
+
+        return slot;
+    }
 
     public spineAttachmentsDirty: boolean;
     private _lastAttachments: Attachment[];
@@ -174,12 +188,12 @@ export class Spine extends Container implements View
         this._autoUpdate = value;
     }
 
-    constructor(options:SpineOptions | SkeletonData)
+    constructor(options: SpineOptions | SkeletonData)
     {
         if (options instanceof SkeletonData)
         {
             options = {
-                skeletonData: options
+                skeletonData: options,
             };
         }
 
@@ -196,8 +210,10 @@ export class Spine extends Container implements View
     {
         if (this.autoUpdate && !this.autoUpdateWarned)
         {
-            // eslint-disable-next-line max-len
-            console.warn('You are calling update on a Spine instance that has autoUpdate set to true. This is probably not what you want.');
+            console.warn(
+                // eslint-disable-next-line max-len
+                'You are calling update on a Spine instance that has autoUpdate set to true. This is probably not what you want.',
+            );
             this.autoUpdateWarned = true;
         }
 
@@ -208,7 +224,7 @@ export class Spine extends Container implements View
     {
         // Because reasons, pixi uses deltaFrames at 60fps.
         // We ignore the default deltaFrames and use the deltaSeconds from pixi ticker.
-        this.updateState(deltaSeconds ?? Ticker.shared.deltaMS / 1000);
+        this._updateState(deltaSeconds ?? Ticker.shared.deltaMS / 1000);
     }
 
     get bounds()
@@ -279,8 +295,9 @@ export class Spine extends Container implements View
      * as this is differed until the `applyState` method is called.
      *
      * @param time the time at which to set the state
+     * @internal
      */
-    updateState(time:number)
+    _updateState(time: number)
     {
         this.state.update(time);
 
@@ -298,8 +315,9 @@ export class Spine extends Container implements View
      * - validates the attachments - to flag if the attachments have changed this state
      * - transforms the attachments - to update the vertices of the attachments based on the new positions
      * - update the slot attachments - to update the position, rotation, scale, and visibility of the attached containers
+     * @internal
      */
-    applyState()
+    _applyState()
     {
         if (!this._stateChanged) return;
         this._stateChanged = false;
@@ -321,7 +339,7 @@ export class Spine extends Container implements View
     {
         const currentDrawOrder = this.skeleton.drawOrder;
 
-        const lastAttachments = this._lastAttachments ||= [];
+        const lastAttachments = (this._lastAttachments ||= []);
 
         let index = 0;
 
@@ -375,7 +393,14 @@ export class Spine extends Container implements View
                     }
                     else
                     {
-                        attachment.computeWorldVertices(slot, 0, attachment.worldVerticesLength, cacheData.vertices, 0, 2);
+                        attachment.computeWorldVertices(
+                            slot,
+                            0,
+                            attachment.worldVerticesLength,
+                            cacheData.vertices,
+                            0,
+                            2,
+                        );
                     }
 
                     cacheData.clipped = false;
@@ -434,7 +459,7 @@ export class Spine extends Container implements View
 
         const clippedData = cacheData.clippedData;
 
-        const sizeChange = (clippedData.vertexCount !== verticesCount || indicesCount !== clippedData.indicesCount);
+        const sizeChange = clippedData.vertexCount !== verticesCount || indicesCount !== clippedData.indicesCount;
 
         if (sizeChange)
         {
@@ -473,15 +498,18 @@ export class Spine extends Container implements View
 
         clippedData.indicesCount = indicesCount;
     }
+
     /**
      * ensure that attached containers map correctly to their slots
      * along with their position, rotation, scale, and visibility.
      */
     private updateSlotAttachments()
     {
-        for (let i = 0; i < this._slotAttachments.length; i++)
+        for (const i in this._slotsObject)
         {
-            const slotAttachment = this._slotAttachments[i];
+            const slotAttachment = this._slotsObject[i];
+
+            if (!slotAttachment) continue;
 
             const { slot, container } = slotAttachment;
 
@@ -501,35 +529,36 @@ export class Spine extends Container implements View
 
                 container.rotation = Math.atan2(
                     Math.sin(rotationX) + Math.sin(rotationY),
-                    Math.cos(rotationX) + Math.cos(rotationY)
+                    Math.cos(rotationX) + Math.cos(rotationY),
                 );
             }
         }
     }
 
-    getCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment):AttachmentCacheData
+    getCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment): AttachmentCacheData
     {
         const key = `${slot.data.index}-${attachment.name}`;
 
         return this.attachmentCacheData[key] || this.initCachedData(slot, attachment);
     }
 
-    private initCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment):AttachmentCacheData
+    private initCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment): AttachmentCacheData
     {
         const key = `${slot.data.index}-${attachment.name}`;
 
-        let vertices:Float32Array;
+        let vertices: Float32Array;
 
         if (attachment instanceof RegionAttachment)
         {
             vertices = new Float32Array(8);
 
             this.attachmentCacheData[key] = {
+                id: key,
                 vertices,
                 clipped: false,
                 indices: [0, 1, 2, 0, 2, 3],
                 uvs: attachment.uvs as Float32Array,
-                color: slot.color
+                color: slot.color,
             };
         }
         else
@@ -537,11 +566,12 @@ export class Spine extends Container implements View
             vertices = new Float32Array(attachment.worldVerticesLength);
 
             this.attachmentCacheData[key] = {
+                id: key,
                 vertices,
                 clipped: false,
                 indices: attachment.triangles,
                 uvs: attachment.uvs as Float32Array,
-                color: slot.color
+                color: slot.color,
             };
         }
 
@@ -573,32 +603,40 @@ export class Spine extends Container implements View
      * to the attached container. A container can only be attached to one slot at a time.
      *
      * @param container - The container to attach to the slot
-     * @param slot - The slot id or  slot to attach to
+     * @param slotRef - The slot id or  slot to attach to
      */
-    attachToSlot(container:Container, slot:string | Slot)
+    addSlotObject(slot: number | string | Slot, container: Container)
     {
-        this.detachFromSlot(container, slot);
+        slot = this.getSlotFromRef(slot);
+
+        // need to check in on the container too...
+        for (const i in this._slotsObject)
+        {
+            if (this._slotsObject[i]?.container === container)
+            {
+                this.removeSlotObject(this._slotsObject[i].slot);
+            }
+        }
+
+        this.removeSlotObject(slot);
 
         container.includeInBuild = false;
-
-        if (typeof slot === 'string')
-        {
-            slot = this.skeleton.findSlot(slot) as Slot;
-        }
-
-        if (!slot)
-        {
-            throw new Error(`Slot ${slot} not found`);
-        }
 
         // TODO only add once??
         this.addChild(container);
 
         // TODO search for copies... - one container - to one bone!
-        this._slotAttachments.push({
-            slot,
-            container
-        });
+        this._slotsObject[slot.data.name] = {
+            container,
+            slot
+        };
+
+        const renderGroup = this.renderGroup || this.parentRenderGroup;
+
+        if (renderGroup)
+        {
+            renderGroup.structureDidChange = true;
+        }
     }
 
     /**
@@ -607,53 +645,33 @@ export class Spine extends Container implements View
      * @param container - The container to detach from the slot
      * @param slot - The slot id or slot to detach from
      */
-    detachFromSlot(container:Container, slot:string | Slot)
+    removeSlotObject(slot: number | string | Slot)
     {
-        container.includeInBuild = true;
+        slot = this.getSlotFromRef(slot);
 
-        if (typeof slot === 'string')
+        const container = this._slotsObject[slot.data.name]?.container;
+
+        if (container)
         {
-            slot = this.skeleton.findSlot(slot) as Slot;
+            this.removeChild(container);
+
+            container.includeInBuild = true;
         }
 
-        if (!slot)
-        {
-            throw new Error(`Bone ${slot} not found`);
-        }
-
-        this.removeChild(container);
-
-        for (let i = 0; i < this._slotAttachments.length; i++)
-        {
-            const mapping = this._slotAttachments[i];
-
-            if (mapping.slot === slot && mapping.container === container)
-            {
-                this._slotAttachments.splice(i, 1);
-                break;
-            }
-        }
+        this._slotsObject[slot.data.name] = null;
     }
 
     /**
      * Returns a container attached to a slot, or undefined if no container is attached.
      *
-     * @param slot - The slot id or slot to get the attachment from
+     * @param slotRef - The slot id or slot to get the attachment from
      * @returns - The container attached to the slot
      */
-    getSlotAttachment(slot:string | Slot)
+    getSlotObject(slot: number | string | Slot)
     {
-        if (typeof slot === 'string')
-        {
-            slot = this.skeleton.findSlot(slot) as Slot;
-        }
+        slot = this.getSlotFromRef(slot);
 
-        if (!slot)
-        {
-            throw new Error(`Slot ${slot} not found`);
-        }
-
-        return this._slotAttachments.find((mapping) => mapping.slot === slot)?.container;
+        return this._slotsObject[slot.data.name].container;
     }
 
     updateBounds()
@@ -668,7 +686,7 @@ export class Spine extends Container implements View
 
         if (skeletonBounds.minX === Infinity)
         {
-            this.applyState();
+            this._applyState();
 
             const drawOrder = this.skeleton.drawOrder;
             const bounds = this._bounds;
@@ -734,7 +752,7 @@ export class Spine extends Container implements View
         this.debug = undefined;
         this.skeleton = null as any;
         this.state = null as any;
-        (this._slotAttachments as any) = null;
+        (this._slotsObject as any) = null;
         this._lastAttachments = null;
         this.attachmentCacheData = null as any;
     }
@@ -750,7 +768,7 @@ export class Spine extends Container implements View
         this._roundPixels = value ? 1 : 0;
     }
 
-    static from({ skeleton, atlas, scale = 1 }:SpineFromOptions)
+    static from({ skeleton, atlas, scale = 1 }: SpineFromOptions)
     {
         const cacheKey = `${skeleton}-${atlas}`;
 
@@ -764,7 +782,10 @@ export class Spine extends Container implements View
         const atlasAsset = Assets.get<TextureAtlas>(atlas);
         const attachmentLoader = new AtlasAttachmentLoader(atlasAsset);
         // eslint-disable-next-line max-len
-        const parser = skeletonAsset instanceof Uint8Array ? new SkeletonBinary(attachmentLoader) : new SkeletonJson(attachmentLoader);
+        const parser
+            = skeletonAsset instanceof Uint8Array
+                ? new SkeletonBinary(attachmentLoader)
+                : new SkeletonJson(attachmentLoader);
 
         // TODO scale?
         parser.scale = scale;
@@ -773,7 +794,7 @@ export class Spine extends Container implements View
         Cache.set(cacheKey, skeletonData);
 
         return new Spine({
-            skeletonData
+            skeletonData,
         });
     }
 }
