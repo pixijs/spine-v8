@@ -94,6 +94,7 @@ export interface SpineEvents
 
 export interface AttachmentCacheData
 {
+    id: string;
     clipped: boolean;
     vertices: Float32Array;
     uvs: Float32Array;
@@ -552,6 +553,7 @@ export class Spine extends Container implements View
             vertices = new Float32Array(8);
 
             this.attachmentCacheData[key] = {
+                id: key,
                 vertices,
                 clipped: false,
                 indices: [0, 1, 2, 0, 2, 3],
@@ -564,6 +566,7 @@ export class Spine extends Container implements View
             vertices = new Float32Array(attachment.worldVerticesLength);
 
             this.attachmentCacheData[key] = {
+                id: key,
                 vertices,
                 clipped: false,
                 indices: attachment.triangles,
