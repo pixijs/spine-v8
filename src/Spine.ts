@@ -334,7 +334,7 @@ export class Spine extends Container implements View
 
         this.transformAttachments();
 
-        this.updateSlotAttachments();
+        this.updateSlotObjects();
     }
 
     private validateAttachments()
@@ -505,7 +505,7 @@ export class Spine extends Container implements View
      * ensure that attached containers map correctly to their slots
      * along with their position, rotation, scale, and visibility.
      */
-    private updateSlotAttachments()
+    private updateSlotObjects()
     {
         for (const i in this._slotsObject)
         {
@@ -513,21 +513,26 @@ export class Spine extends Container implements View
 
             if (!slotAttachment) continue;
 
-            const { slot, container } = slotAttachment;
+            this.updateSlotObject(slotAttachment);
+        }
+    }
 
-            container.visible = this.skeleton.drawOrder.includes(slot);
+    private updateSlotObject(slotAttachment: {slot:Slot, container:Container})
+    {
+        const { slot, container } = slotAttachment;
 
-            if (container.visible)
-            {
-                const bone = slot.bone;
+        container.visible = this.skeleton.drawOrder.includes(slot);
 
-                container.position.set(bone.worldX, bone.worldY);
+        if (container.visible)
+        {
+            const bone = slot.bone;
 
-                container.scale.x = bone.getWorldScaleX();
-                container.scale.y = bone.getWorldScaleY();
+            container.position.set(bone.worldX, bone.worldY);
 
-                container.rotation = bone.getWorldRotationX() * DEG_TO_RAD;
-            }
+            container.scale.x = bone.getWorldScaleX();
+            container.scale.y = bone.getWorldScaleY();
+
+            container.rotation = bone.getWorldRotationX() * DEG_TO_RAD;
         }
     }
 
@@ -622,18 +627,12 @@ export class Spine extends Container implements View
         // TODO only add once??
         this.addChild(container);
 
-        // TODO search for copies... - one container - to one bone!
         this._slotsObject[slot.data.name] = {
             container,
             slot
         };
 
-        const renderGroup = this.renderGroup || this.parentRenderGroup;
-
-        if (renderGroup)
-        {
-            renderGroup.structureDidChange = true;
-        }
+        this.updateSlotObject(this._slotsObject[slot.data.name]);
     }
 
     /**
