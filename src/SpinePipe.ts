@@ -115,7 +115,7 @@ export class SpinePipe implements RenderPipe<Spine>
                 }
             }
 
-            const containerAttachment = spine._slotsObject.find((mapping) => mapping.slot === slot);
+            const containerAttachment = spine._slotsObject[slot.data.name];
 
             if (containerAttachment)
             {
