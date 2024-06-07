@@ -306,7 +306,6 @@ export class Spine extends Container implements View
     _updateState(time: number)
     {
         this.state.update(time);
-        this.beforeUpdateWorldTransforms(this);
         this.skeleton.update(time);
 
         this._stateChanged = true;
@@ -334,7 +333,9 @@ export class Spine extends Container implements View
 
         this.state.apply(skeleton);
 
+        this.beforeUpdateWorldTransforms(this);
         skeleton.updateWorldTransform(Physics.update);
+        this.afterUpdateWorldTransforms(this);
 
         this.validateAttachments();
 
