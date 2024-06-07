@@ -37,7 +37,7 @@
     "watch": "xs watch"
   },
   "dependencies": {
-    "@esotericsoftware/spine-core": "^4.2.45"
+    "@esotericsoftware/spine-core": "~4.2.45"
   },
   "devDependencies": {
     "@pixi/extension-scripts": "^2.4.1",
