@@ -5,12 +5,13 @@ on:
         branches:
             - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
-    release_candidate:
+    deploy:
         runs-on: ubuntu-latest
-        env:
-            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-            BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -20,4 +21,12 @@ jobs:
               uses: ./.github/actions/setup
 
             - name: Build Project
-              run: npm run deploy
+              run: |
+                git config --global user.name "${{ github.actor }}"
+                git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+                git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/pixijs/spine-v8.git
+                npm run build
+                npm run docs
+                npm run upload -- -u "github-actions-bot <support+actions@github.com>"
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

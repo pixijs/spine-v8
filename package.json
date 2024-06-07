@@ -35,7 +35,7 @@
     "test": "xs test",
     "types": "xs types",
     "watch": "xs watch",
-    "deploy": "xs deploy"
+    "upload": "xs upload"
   },
   "dependencies": {
     "@esotericsoftware/spine-core": "~4.2.45"
