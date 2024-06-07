@@ -34,7 +34,8 @@
     "start": "xs serve",
     "test": "xs test",
     "types": "xs types",
-    "watch": "xs watch"
+    "watch": "xs watch",
+    "deploy": "xs deploy"
   },
   "dependencies": {
     "@esotericsoftware/spine-core": "~4.2.45"

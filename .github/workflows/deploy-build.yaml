@@ -1,0 +1,23 @@
+name: Deploy Examples
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    release_candidate:
+        runs-on: ubuntu-latest
+        env:
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.head_ref }}
+
+            - name: Setup Project
+              uses: ./.github/actions/setup
+
+            - name: Build Project
+              run: npm run deploy

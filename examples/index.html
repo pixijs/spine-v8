@@ -1,52 +1,44 @@
+<!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>spine-pixi</title>
-    <script src="https://cdn.jsdelivr.net/npm/pixi.js@latest/dist/pixi.min.js"></script>
-    <script src="../dist/spine-pixi.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tweakpane@3.1.9/dist/tweakpane.min.js"></script>
-    <link rel="stylesheet" href="./index.css">
-  </head>
 
-  <body>
-    <script>
-      (async function () {
-        var app = new PIXI.Application();
-        await app.init({
-          width: window.innerWidth,
-          height: window.innerHeight,
-          resolution: window.devicePixelRatio || 1,
-          autoDensity: true,
-          resizeTo: window,
-          backgroundColor: 0x2c3e50,
-          hello: true,
-        })
-        document.body.appendChild(app.view);
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>PixiJS Examples</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="index.css" />
+</head>
 
-        // Pre-load the skeleton data and atlas. You can also load .json skeleton data.
-        PIXI.Assets.add({alias: "spineboyData", src: "./assets/spineboy-pro.skel"});
-        PIXI.Assets.add({alias: "spineboyAtlas", src: "./assets/spineboy-pma.atlas"});
-        await PIXI.Assets.load(["spineboyData", "spineboyAtlas"]);
+<body>
+  <div style="width: 300px; margin: 0 auto">
+    <h1>PixiJS Examples</h1>
+    <ul>
+      <ul>
+        <li><a href="./basic.html">Basic example</a></li>
+        <li><a href="./manual-loading.html">Manual Loading</a></li>
+        <li>
+          <a href="./events-example.html">Events example</a>
+        </li>
+        <li>
+          <a href="./mix-and-match-example.html">Mix and match</a>
+        </li>
+        <li>
+          <a href="./simple-input.html">Simple input</a>
+        </li>
+        <li>
+          <a href="./mouse-following.html">Mouse following</a>
+        </li>
+        <li>
+          <a href="./control-bones-example.html">Control bones</a>
+        </li>
+        <li><a href="./physics.html">Physics</a></li>
+        <li><a href="./physics2.html">Physics II</a></li>
+        <li><a href="./physics3.html">Physics III</a></li>
+        <li><a href="./physics4.html">Physics IV</a></li>
+        <li><a href="./slot-objects.html">Slot Objects</a></li>
+      </ul>
+    </ul>
+  </div>
+</body>
 
-        // Create the spine display object
-        const spineboy = spine.Spine.from({skeleton: "spineboyData", atlas: "spineboyAtlas", 
-          scale: 0.5,
-        });
-
-        // Set the default mix time to use when transitioning
-        // from one animation to the next.
-        spineboy.state.data.defaultMix = 0.2;
-
-        // Center the spine object on screen.
-        spineboy.x = window.innerWidth / 2;
-        spineboy.y = window.innerHeight / 2 + spineboy.getBounds().height / 2;
-
-        // Set animation "run" on track 0, looped.
-        spineboy.state.setAnimation(0, "run", true);
-
-        // Add the display object to the stage.
-        app.stage.addChild(spineboy);
-      })();
-    </script>
-  </body>
 </html>
