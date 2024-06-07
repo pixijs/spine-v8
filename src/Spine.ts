@@ -49,6 +49,7 @@ import {
     ClippingAttachment,
     Color,
     MeshAttachment,
+    Physics,
     RegionAttachment,
     Skeleton,
     SkeletonBinary,
@@ -119,6 +120,9 @@ export class Spine extends Container implements View
     public _boundsDirty = true;
     public _roundPixels: 0 | 1;
     private _bounds: Bounds = new Bounds();
+
+    public beforeUpdateWorldTransforms: (object: Spine) => void = () => { /** */ };
+    public afterUpdateWorldTransforms: (object: Spine) => void = () => { /** */ };
 
     // Spine properties
     public skeleton: Skeleton;
@@ -302,6 +306,7 @@ export class Spine extends Container implements View
     _updateState(time: number)
     {
         this.state.update(time);
+        this.skeleton.update(time);
 
         this._stateChanged = true;
 
@@ -328,7 +333,9 @@ export class Spine extends Container implements View
 
         this.state.apply(skeleton);
 
-        skeleton.updateWorldTransform();
+        this.beforeUpdateWorldTransforms(this);
+        skeleton.updateWorldTransform(Physics.update);
+        this.afterUpdateWorldTransforms(this);
 
         this.validateAttachments();
 
@@ -580,7 +587,7 @@ export class Spine extends Container implements View
         return this.attachmentCacheData[key];
     }
 
-    onViewUpdate()
+    protected onViewUpdate()
     {
         // increment from the 12th bit!
         this._didChangeId += 1 << 12;
@@ -607,7 +614,7 @@ export class Spine extends Container implements View
      * @param container - The container to attach to the slot
      * @param slotRef - The slot id or  slot to attach to
      */
-    addSlotObject(slot: number | string | Slot, container: Container)
+    public addSlotObject(slot: number | string | Slot, container: Container)
     {
         slot = this.getSlotFromRef(slot);
 
@@ -641,7 +648,7 @@ export class Spine extends Container implements View
      * @param container - The container to detach from the slot
      * @param slotOrContainer - The container, slot id or slot to detach from
      */
-    removeSlotObject(slotOrContainer: number | string | Slot | Container)
+    public removeSlotObject(slotOrContainer: number | string | Slot | Container)
     {
         let containerToRemove: Container | undefined;
 
@@ -680,14 +687,14 @@ export class Spine extends Container implements View
      * @param slotRef - The slot id or slot to get the attachment from
      * @returns - The container attached to the slot
      */
-    getSlotObject(slot: number | string | Slot)
+    public getSlotObject(slot: number | string | Slot)
     {
         slot = this.getSlotFromRef(slot);
 
         return this._slotsObject[slot.data.name].container;
     }
 
-    updateBounds()
+    private updateBounds()
     {
         this._boundsDirty = false;
 
@@ -729,6 +736,7 @@ export class Spine extends Container implements View
         }
     }
 
+    /** @internal */
     addBounds(bounds: Bounds)
     {
         bounds.addBounds(this.bounds);
@@ -779,6 +787,32 @@ export class Spine extends Container implements View
     set roundPixels(value: boolean)
     {
         this._roundPixels = value ? 1 : 0;
+    }
+
+    /** Converts a point from the skeleton coordinate system to the Pixi world coordinate system. */
+    public skeletonToPixiWorldCoordinates(point: { x: number; y: number })
+    {
+        this.worldTransform.apply(point, point);
+    }
+
+    /** Converts a point from the Pixi world coordinate system to the skeleton coordinate system. */
+    public pixiWorldCoordinatesToSkeleton(point: { x: number; y: number })
+    {
+        this.worldTransform.applyInverse(point, point);
+    }
+
+    /** Converts a point from the Pixi world coordinate system to the bone's local coordinate system. */
+    public pixiWorldCoordinatesToBone(point: { x: number; y: number }, bone: Bone)
+    {
+        this.pixiWorldCoordinatesToSkeleton(point);
+        if (bone.parent)
+        {
+            bone.parent.worldToLocal(point as Vector2);
+        }
+        else
+        {
+            bone.worldToLocal(point as Vector2);
+        }
     }
 
     static from({ skeleton, atlas, scale = 1 }: SpineFromOptions)
