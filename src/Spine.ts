@@ -149,7 +149,7 @@ export class Spine extends Container implements View
     private _lastAttachments: Attachment[];
 
     private _stateChanged: boolean;
-    private attachmentCacheData: Record<string, AttachmentCacheData> = {};
+    private attachmentCacheData: Record<string, AttachmentCacheData>[] = [];
 
     public get debug(): ISpineDebugRenderer | undefined
     {
@@ -208,6 +208,13 @@ export class Spine extends Container implements View
         this.skeleton = new Skeleton(skeletonData);
         this.state = new AnimationState(new AnimationStateData(skeletonData));
         this.autoUpdate = options?.autoUpdate ?? true;
+
+        const slots = this.skeleton.slots;
+
+        for (let i = 0; i < slots.length; i++)
+        {
+            this.attachmentCacheData[i] = Object.create(null);
+        }
 
         this._updateState(0);
     }
@@ -546,23 +553,19 @@ export class Spine extends Container implements View
     /** @internal */
     _getCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment): AttachmentCacheData
     {
-        const key = `${slot.data.index}-${attachment.name}`;
-
-        return this.attachmentCacheData[key] || this.initCachedData(slot, attachment);
+        return this.attachmentCacheData[slot.data.index][attachment.name] || this.initCachedData(slot, attachment);
     }
 
     private initCachedData(slot: Slot, attachment: RegionAttachment | MeshAttachment): AttachmentCacheData
     {
-        const key = `${slot.data.index}-${attachment.name}`;
-
         let vertices: Float32Array;
 
         if (attachment instanceof RegionAttachment)
         {
             vertices = new Float32Array(8);
 
-            this.attachmentCacheData[key] = {
-                id: key,
+            this.attachmentCacheData[slot.data.index][attachment.name] = {
+                id: `${slot.data.index}-${attachment.name}`,
                 vertices,
                 clipped: false,
                 indices: [0, 1, 2, 0, 2, 3],
@@ -574,8 +577,8 @@ export class Spine extends Container implements View
         {
             vertices = new Float32Array(attachment.worldVerticesLength);
 
-            this.attachmentCacheData[key] = {
-                id: key,
+            this.attachmentCacheData[slot.data.index][attachment.name] = {
+                id: `${slot.data.index}-${attachment.name}`,
                 vertices,
                 clipped: false,
                 indices: attachment.triangles,
@@ -584,7 +587,7 @@ export class Spine extends Container implements View
             };
         }
 
-        return this.attachmentCacheData[key];
+        return this.attachmentCacheData[slot.data.index][attachment.name];
     }
 
     protected onViewUpdate()
