@@ -1,12 +1,12 @@
 {
   "name": "@pixi/spine-pixi",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "A port of the @esotericsoftware/spine-pixi runtime to PixiJS v8.",
   "homepage": "https://pixijs.com/",
-  "bugs": "https://github.com/pixijs/spine-pixi/issues",
+  "bugs": "https://github.com/pixijs/spine-v8/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pixijs/spine-pixi.git"
+    "url": "https://github.com/pixijs/spine-v8.git"
   },
   "license": "MIT",
   "author": "PixiJS Team",
@@ -35,7 +35,7 @@
     "test": "xs test",
     "types": "xs types",
     "watch": "xs watch",
-    "deploy": "xs deploy"
+    "upload": "xs upload"
   },
   "dependencies": {
     "@esotericsoftware/spine-core": "~4.2.45"

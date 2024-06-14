@@ -12,9 +12,6 @@ concurrency:
 jobs:
     deploy:
         runs-on: ubuntu-latest
-        env:
-            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-            BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -27,4 +24,9 @@ jobs:
               run: |
                 git config --global user.name "${{ github.actor }}"
                 git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
-                npm run deploy
+                git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/pixijs/spine-v8.git
+                npm run build
+                npm run docs
+                npm run upload -- -u "github-actions-bot <support+actions@github.com>"
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
