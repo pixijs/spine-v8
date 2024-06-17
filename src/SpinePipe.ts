@@ -148,7 +148,7 @@ export class SpinePipe implements RenderPipe<Spine>
             {
                 const batchableSpineSlot = gpuSpine.slotBatches[spine._getCachedData(slot, attachment).id];
 
-                batchableSpineSlot.batcher.updateElement(batchableSpineSlot);
+                batchableSpineSlot.batcher?.updateElement(batchableSpineSlot);
             }
         }
     }
