@@ -37,9 +37,7 @@ import {
 } from 'pixi.js';
 import { BatchableSpineSlot } from './BatchableSpineSlot';
 import { Spine } from './Spine';
-import { MeshAttachment, RegionAttachment, SkeletonClipping } from '@esotericsoftware/spine-core';
-
-const clipper = new SkeletonClipping();
+import { MeshAttachment, RegionAttachment } from '@esotericsoftware/spine-core';
 
 const spineBlendModeMap = {
     0: 'normal',
@@ -101,7 +99,7 @@ export class SpinePipe implements RenderPipe<Spine>
                 const cacheData = spine._getCachedData(slot, attachment);
                 const batchableSpineSlot = gpuSpine.slotBatches[cacheData.id] ||= new BatchableSpineSlot();
 
-                if (!cacheData.clipped || (cacheData.clipped && cacheData.clippedData.vertices.length > 0))
+                if (!cacheData.clipped || (cacheData.clipped && cacheData.clippedData.vertexCount > 0))
                 {
                     batchableSpineSlot.setData(
                         spine,
@@ -126,8 +124,6 @@ export class SpinePipe implements RenderPipe<Spine>
                 container.includeInBuild = false;
             }
         }
-
-        clipper.clipEnd();
     }
 
     updateRenderable(spine: Spine)
@@ -146,9 +142,16 @@ export class SpinePipe implements RenderPipe<Spine>
 
             if (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
             {
-                const batchableSpineSlot = gpuSpine.slotBatches[spine._getCachedData(slot, attachment).id];
+                const cacheData = spine._getCachedData(slot, attachment);
 
-                batchableSpineSlot.batcher?.updateElement(batchableSpineSlot);
+                if (!cacheData.clipped || (cacheData.clipped && cacheData.clippedData.vertexCount > 0))
+                {
+                    const batchableSpineSlot = gpuSpine.slotBatches[cacheData.id];
+
+                    // this marks the batch dirty and make
+                    // the batcher call packAttributes on the BatchableSpineSlot
+                    batchableSpineSlot.batcher?.updateElement(batchableSpineSlot);
+                }
             }
         }
     }

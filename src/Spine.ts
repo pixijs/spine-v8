@@ -433,8 +433,10 @@ export class Spine extends Container implements View
                 else
                 {
                     clipper.clipEndWithSlot(slot);
+                    continue;
                 }
             }
+            clipper.clipEndWithSlot(slot);
         }
 
         clipper.clipEnd();
