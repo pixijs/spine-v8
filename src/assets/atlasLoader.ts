@@ -120,7 +120,15 @@ const spineTextureAtlasLoader: AssetExtension<RawAtlas | TextureAtlas, ISpineAtl
                     // eslint-disable-next-line max-len
                     const url: string = providedPage ?? path.normalize([...basePath.split(path.sep), pageName].join(path.sep));
 
-                    const pixiPromise = loader.load<Texture>({ src: url, data: metadata.imageMetadata }).then((texture) =>
+                    const assetsToLoadIn = {
+                        src: url,
+                        data: {
+                            ...metadata.imageMetadata,
+                            alphaMode: page.pma ? 'premultiplied-alpha' : 'premultiply-alpha-on-upload'
+                        }
+                    };
+
+                    const pixiPromise = loader.load<Texture>(assetsToLoadIn).then((texture) =>
                     {
                         page.setTexture(SpineTexture.from(texture.source));
                     });
