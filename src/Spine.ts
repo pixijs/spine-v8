@@ -402,6 +402,7 @@ export class Spine extends Container implements View
                 if (attachment instanceof MeshAttachment || attachment instanceof RegionAttachment)
                 {
                     const cacheData = this._getCachedData(slot, attachment);
+                    const previousAttachment = attachment.region?.texture.texture;
 
                     if (attachment instanceof RegionAttachment)
                     {
@@ -418,6 +419,8 @@ export class Spine extends Container implements View
                             2,
                         );
                     }
+
+                    if (attachment.region.texture.texture !== previousAttachment) this.spineAttachmentsDirty = true;
 
                     cacheData.clipped = false;
 
