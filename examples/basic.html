@@ -25,7 +25,7 @@
 
         // Pre-load the skeleton data and atlas. You can also load .json skeleton data.
         PIXI.Assets.add({alias: "spineboyData", src: "./assets/spineboy-pro.skel"});
-        PIXI.Assets.add({alias: "spineboyAtlas", src: "./assets/spineboy.atlas"});
+        PIXI.Assets.add({alias: "spineboyAtlas", src: "./assets/spineboy-pma.atlas"});
         await PIXI.Assets.load(["spineboyData", "spineboyAtlas"]);
 
         // Create the spine display object
@@ -42,7 +42,7 @@
         spineboy.y = window.innerHeight / 2 + spineboy.getBounds().height / 2;
 
         // Set animation "run" on track 0, looped.
-        spineboy.state.setAnimation(0, "portal", true);
+        spineboy.state.setAnimation(0, "run", true);
 
         // Add the display object to the stage.
         app.stage.addChild(spineboy);
