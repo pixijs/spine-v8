@@ -101,16 +101,16 @@ export class SpinePipe implements RenderPipe<Spine>
                 const cacheData = spine._getCachedData(slot, attachment);
                 const batchableSpineSlot = gpuSpine.slotBatches[cacheData.id] ||= new BatchableSpineSlot();
 
-                if (!cacheData.clipped || (cacheData.clipped && cacheData.clippedData.vertices.length > 0))
-                {
-                    batchableSpineSlot.setData(
-                        spine,
-                        cacheData,
-                        (attachment.region?.texture.texture) || Texture.EMPTY,
-                        blendMode,
-                        roundPixels
-                    );
+                batchableSpineSlot.setData(
+                    spine,
+                    cacheData,
+                    (attachment.region?.texture.texture) || Texture.EMPTY,
+                    blendMode,
+                    roundPixels
+                );
 
+                if (!cacheData.skipRender)
+                {
                     batcher.addToBatch(batchableSpineSlot);
                 }
             }
@@ -146,9 +146,14 @@ export class SpinePipe implements RenderPipe<Spine>
 
             if (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
             {
-                const batchableSpineSlot = gpuSpine.slotBatches[spine._getCachedData(slot, attachment).id];
+                const cacheData = spine._getCachedData(slot, attachment);
 
-                batchableSpineSlot.batcher?.updateElement(batchableSpineSlot);
+                if (!cacheData.skipRender)
+                {
+                    const batchableSpineSlot = gpuSpine.slotBatches[spine._getCachedData(slot, attachment).id];
+
+                    batchableSpineSlot.batcher?.updateElement(batchableSpineSlot);
+                }
             }
         }
     }

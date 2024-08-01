@@ -101,6 +101,7 @@ export interface AttachmentCacheData
     uvs: Float32Array;
     indices: number[];
     color: Color;
+    skipRender: boolean;
     clippedData?: {
         vertices: Float32Array;
         uvs: Float32Array;
@@ -431,7 +432,7 @@ export class Spine extends Container implements View
                         skeletonColor.a * slotColor.a * attachmentColor.a,
                     );
 
-                    cacheData.clipped = false;
+                    cacheData.skipRender = cacheData.clipped = false;
 
                     if (clipper.isClipping())
                     {
@@ -489,7 +490,9 @@ export class Spine extends Container implements View
 
         const sizeChange = clippedData.vertexCount !== verticesCount || indicesCount !== clippedData.indicesCount;
 
-        if (sizeChange)
+        cacheData.skipRender = verticesCount === 0;
+
+        if (sizeChange && !cacheData.skipRender)
         {
             this.spineAttachmentsDirty = true;
 
@@ -583,6 +586,7 @@ export class Spine extends Container implements View
                 indices: [0, 1, 2, 0, 2, 3],
                 uvs: attachment.uvs as Float32Array,
                 color: new Color(1, 1, 1, 1),
+                skipRender: false,
             };
         }
         else
@@ -596,6 +600,7 @@ export class Spine extends Container implements View
                 indices: attachment.triangles,
                 uvs: attachment.uvs as Float32Array,
                 color: new Color(1, 1, 1, 1),
+                skipRender: false,
             };
         }
 
