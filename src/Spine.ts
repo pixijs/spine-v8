@@ -100,7 +100,7 @@ export interface AttachmentCacheData
     vertices: Float32Array;
     uvs: Float32Array;
     indices: number[];
-    color: { r: number; g: number; b: number; a: number };
+    color: Color;
     clippedData?: {
         vertices: Float32Array;
         uvs: Float32Array;
@@ -419,6 +419,18 @@ export class Spine extends Container implements View
                         );
                     }
 
+                    const skeleton = slot.bone.skeleton;
+                    const skeletonColor = skeleton.color;
+                    const slotColor = slot.color;
+                    const attachmentColor = attachment.color;
+
+                    cacheData.color.set(
+                        skeletonColor.r * slotColor.r * attachmentColor.r,
+                        skeletonColor.g * slotColor.g * attachmentColor.g,
+                        skeletonColor.b * slotColor.b * attachmentColor.b,
+                        skeletonColor.a * slotColor.a * attachmentColor.a,
+                    );
+
                     cacheData.clipped = false;
 
                     if (clipper.isClipping())
@@ -570,7 +582,7 @@ export class Spine extends Container implements View
                 clipped: false,
                 indices: [0, 1, 2, 0, 2, 3],
                 uvs: attachment.uvs as Float32Array,
-                color: slot.color,
+                color: new Color(1, 1, 1, 1),
             };
         }
         else
@@ -583,7 +595,7 @@ export class Spine extends Container implements View
                 clipped: false,
                 indices: attachment.triangles,
                 uvs: attachment.uvs as Float32Array,
-                color: slot.color,
+                color: new Color(1, 1, 1, 1),
             };
         }
 

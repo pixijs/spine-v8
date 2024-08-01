@@ -110,7 +110,6 @@ export class BatchableSpineSlot implements BatchableObject
 
         const parentColor:number = this.renderable.groupColor;
         const parentAlpha:number = this.renderable.groupAlpha;
-
         let abgr:number;
 
         const mixedA = (slotColor.a * parentAlpha) * 255;
@@ -121,9 +120,9 @@ export class BatchableSpineSlot implements BatchableObject
             const parentG = (parentColor >> 8) & 0xFF;
             const parentR = parentColor & 0xFF;
 
-            const mixedR = (slotColor.r * parentR) * 255;
-            const mixedG = (slotColor.g * parentG) * 255;
-            const mixedB = (slotColor.b * parentB) * 255;
+            const mixedR = (slotColor.r * parentR);
+            const mixedG = (slotColor.g * parentG);
+            const mixedB = (slotColor.b * parentB);
 
             abgr = ((mixedA) << 24) | (mixedB << 16) | (mixedG << 8) | mixedR;
         }
