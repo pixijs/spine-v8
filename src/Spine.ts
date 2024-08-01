@@ -420,7 +420,7 @@ export class Spine extends Container implements View
                         );
                     }
 
-                    if (attachment.region.texture.texture !== previousAttachment) this.spineAttachmentsDirty = true;
+                    if (attachment.region?.texture.texture !== previousAttachment) this.spineAttachmentsDirty = true;
 
                     cacheData.clipped = false;
 
