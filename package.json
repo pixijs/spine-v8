@@ -1,6 +1,6 @@
 {
   "name": "@pixi/spine-pixi",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "A port of the @esotericsoftware/spine-pixi runtime to PixiJS v8.",
   "homepage": "https://pixijs.com/",
   "bugs": "https://github.com/pixijs/spine-v8/issues",
