@@ -442,14 +442,11 @@ export class Spine extends Container implements View
                 else if (attachment instanceof ClippingAttachment)
                 {
                     clipper.clipStart(slot, attachment);
-                }
-                else
-                {
-                    clipper.clipEndWithSlot(slot);
+                    continue;
                 }
             }
+            clipper.clipEndWithSlot(slot);
         }
-
         clipper.clipEnd();
     }
 
@@ -492,7 +489,7 @@ export class Spine extends Container implements View
 
         cacheData.skipRender = verticesCount === 0;
 
-        if (sizeChange && !cacheData.skipRender)
+        if (sizeChange)
         {
             this.spineAttachmentsDirty = true;
 
