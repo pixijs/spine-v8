@@ -420,6 +420,8 @@ export class Spine extends Container implements View
                         );
                     }
 
+                    cacheData.uvs = attachment.uvs as Float32Array;
+
                     const skeleton = slot.bone.skeleton;
                     const skeletonColor = skeleton.color;
                     const slotColor = slot.color;
