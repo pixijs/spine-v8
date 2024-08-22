@@ -837,7 +837,7 @@ export class Spine extends Container implements View
 
     static from({ skeleton, atlas, scale = 1 }: SpineFromOptions)
     {
-        const cacheKey = `${skeleton}-${atlas}`;
+        const cacheKey = `${skeleton}-${atlas}-${scale}`;
 
         if (Cache.has(cacheKey))
         {
