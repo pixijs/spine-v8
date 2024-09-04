@@ -29,83 +29,44 @@
 
 import { AttachmentCacheData, Spine } from './Spine';
 
-import type { Batch, BatchableObject, Batcher, BLEND_MODES, IndexBufferArray, Texture } from 'pixi.js';
+import type { Batch, BatchableMeshElement, Batcher, BLEND_MODES, Texture } from 'pixi.js';
 
-export class BatchableSpineSlot implements BatchableObject
+export class BatchableSpineSlot implements BatchableMeshElement
 {
-    indexStart: number;
-    textureId: number;
-    texture: Texture;
-    location: number;
-    batcher: Batcher;
-    batch: Batch;
-    renderable: Spine;
-
-    vertices: Float32Array;
-    indices: number[] | Uint16Array;
-    uvs: Float32Array;
+    indexOffset = 0;
+    attributeOffset = 0;
 
     indexSize: number;
-    vertexSize: number;
+    attributeSize: number;
+
+    batcherName = 'darkTint';
+
+    packAsQuad = false;
+
+    renderable: Spine;
+
+    positions: Float32Array;
+    indices: number[] | Uint16Array;
+    uvs: Float32Array;
 
     roundPixels: 0 | 1;
     data: AttachmentCacheData;
     blendMode: BLEND_MODES;
 
-    setData(
-        renderable:Spine,
-        data:AttachmentCacheData,
-        texture:Texture,
-        blendMode:BLEND_MODES,
-        roundPixels: 0 | 1)
+    darkTint: number;
+
+    texture: Texture;
+
+    // used internally by batcher specific..
+    // stored for efficient updating..
+    indexStart: number;
+    textureId: number;
+    attributeStart: number;
+    batcher: Batcher;
+    batch: Batch;
+
+    get color()
     {
-        this.renderable = renderable;
-        this.data = data;
-
-        if (data.clipped)
-        {
-            const clippedData = data.clippedData;
-
-            this.indexSize = clippedData.indicesCount;
-            this.vertexSize = clippedData.vertexCount;
-            this.vertices = clippedData.vertices;
-            this.indices = clippedData.indices;
-            this.uvs = clippedData.uvs;
-        }
-        else
-        {
-            this.indexSize = data.indices.length;
-            this.vertexSize = data.vertices.length / 2;
-            this.vertices = data.vertices;
-            this.indices = data.indices;
-            this.uvs = data.uvs;
-        }
-
-        this.texture = texture;
-        this.roundPixels = roundPixels;
-
-        this.blendMode = blendMode;
-    }
-
-    packIndex(indexBuffer: IndexBufferArray, index: number, indicesOffset: number)
-    {
-        const indices = this.indices;
-
-        for (let i = 0; i < indices.length; i++)
-        {
-            indexBuffer[index++] = indices[i] + indicesOffset;
-        }
-    }
-
-    packAttributes(
-        float32View: Float32Array,
-        uint32View: Uint32Array,
-        index: number,
-        textureId: number
-    )
-    {
-        const { uvs, vertices, vertexSize } = this;
-
         const slotColor = this.data.color;
 
         const parentColor:number = this.renderable.groupColor;
@@ -131,34 +92,52 @@ export class BatchableSpineSlot implements BatchableObject
             abgr = ((mixedA) << 24) | ((slotColor.b * 255) << 16) | ((slotColor.g * 255) << 8) | (slotColor.r * 255);
         }
 
-        const matrix = this.renderable.groupTransform;
+        return abgr;
+    }
 
-        const a = matrix.a;
-        const b = matrix.b;
-        const c = matrix.c;
-        const d = matrix.d;
-        const tx = matrix.tx;
-        const ty = matrix.ty;
+    get darkColor()
+    {
+        const darkColor = this.data.darkColor;
 
-        const textureIdAndRound = (textureId << 16) | (this.roundPixels & 0xFFFF);
+        return ((darkColor.a) << 24) | ((darkColor.b * 255) << 16) | ((darkColor.g * 255) << 8) | (darkColor.r * 255);
+    }
 
-        for (let i = 0; i < vertexSize; i++)
+    get groupTransform() { return this.renderable.groupTransform; }
+
+    setData(
+        renderable:Spine,
+        data:AttachmentCacheData,
+        texture:Texture,
+        blendMode:BLEND_MODES,
+        roundPixels: 0 | 1)
+    {
+        this.renderable = renderable;
+        this.data = data;
+
+        if (data.clipped)
         {
-            const x = vertices[i * 2];
-            const y = vertices[(i * 2) + 1];
+            const clippedData = data.clippedData;
 
-            float32View[index++] = (a * x) + (c * y) + tx;
-            float32View[index++] = (b * x) + (d * y) + ty;
-
-            // uv
-            float32View[index++] = uvs[i * 2];
-            float32View[index++] = uvs[(i * 2) + 1];
-
-            // color
-            uint32View[index++] = abgr;
-
-            // texture id
-            uint32View[index++] = textureIdAndRound;
+            this.indexSize = clippedData.indicesCount;
+            this.attributeSize = clippedData.vertexCount;
+            this.positions = clippedData.vertices;
+            this.indices = clippedData.indices;
+            this.uvs = clippedData.uvs;
         }
+        else
+        {
+            this.indexSize = data.indices.length;
+            this.attributeSize = data.vertices.length / 2;
+            this.positions = data.vertices;
+            this.indices = data.indices;
+            this.uvs = data.uvs;
+        }
+
+        this.texture = texture;
+        this.roundPixels = roundPixels;
+
+        this.blendMode = blendMode;
+
+        this.batcherName = 'darkTint';// data.darkTint ? 'darkTint' : 'default';
     }
 }

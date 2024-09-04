@@ -37,7 +37,7 @@ import {
     DestroyOptions,
     PointData,
     Ticker,
-    View,
+    ViewContainer,
 } from 'pixi.js';
 import { ISpineDebugRenderer } from './SpineDebugRenderer';
 import {
@@ -101,6 +101,8 @@ export interface AttachmentCacheData
     uvs: Float32Array;
     indices: number[];
     color: Color;
+    darkColor: Color | null;
+    darkTint: boolean;
     skipRender: boolean;
     clippedData?: {
         vertices: Float32Array;
@@ -111,16 +113,13 @@ export interface AttachmentCacheData
     };
 }
 
-export class Spine extends Container implements View
+export class Spine extends ViewContainer
 {
     // Pixi properties
     public batched = true;
     public buildId = 0;
     public override readonly renderPipeId = 'spine';
     public _didSpineUpdate = false;
-    public _boundsDirty = true;
-    public _roundPixels: 0 | 1;
-    private _bounds: Bounds = new Bounds();
 
     public beforeUpdateWorldTransforms: (object: Spine) => void = () => { /** */ };
     public afterUpdateWorldTransforms: (object: Spine) => void = () => { /** */ };
@@ -425,6 +424,7 @@ export class Spine extends Container implements View
                     const skeleton = slot.bone.skeleton;
                     const skeletonColor = skeleton.color;
                     const slotColor = slot.color;
+
                     const attachmentColor = attachment.color;
 
                     cacheData.color.set(
@@ -433,6 +433,13 @@ export class Spine extends Container implements View
                         skeletonColor.b * slotColor.b * attachmentColor.b,
                         skeletonColor.a * slotColor.a * attachmentColor.a,
                     );
+
+                    cacheData.darkTint = !!slot.darkColor;
+
+                    if (slot.darkColor)
+                    {
+                        cacheData.darkColor.setFromColor(slot.darkColor);
+                    }
 
                     cacheData.skipRender = cacheData.clipped = false;
 
@@ -585,6 +592,8 @@ export class Spine extends Container implements View
                 indices: [0, 1, 2, 0, 2, 3],
                 uvs: attachment.uvs as Float32Array,
                 color: new Color(1, 1, 1, 1),
+                darkColor: new Color(0, 0, 0, 0),
+                darkTint: false,
                 skipRender: false,
             };
         }
@@ -599,6 +608,8 @@ export class Spine extends Container implements View
                 indices: attachment.triangles,
                 uvs: attachment.uvs as Float32Array,
                 color: new Color(1, 1, 1, 1),
+                darkColor: new Color(0, 0, 0, 0),
+                darkTint: false,
                 skipRender: false,
             };
         }
@@ -761,21 +772,6 @@ export class Spine extends Container implements View
         bounds.addBounds(this.bounds);
     }
 
-    public containsPoint(point: PointData)
-    {
-        const bounds = this.bounds;
-
-        if (point.x >= bounds.minX && point.x <= bounds.maxX)
-        {
-            if (point.y >= bounds.minY && point.y <= bounds.maxY)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /**
      * Destroys this sprite renderable and optionally its texture.
      * @param options - Options parameter. A boolean will act as if all options
@@ -795,17 +791,6 @@ export class Spine extends Container implements View
         (this._slotsObject as any) = null;
         this._lastAttachments = null;
         this.attachmentCacheData = null as any;
-    }
-
-    /** Whether or not to round the x/y position of the sprite. */
-    get roundPixels()
-    {
-        return !!this._roundPixels;
-    }
-
-    set roundPixels(value: boolean)
-    {
-        this._roundPixels = value ? 1 : 0;
     }
 
     /** Converts a point from the skeleton coordinate system to the Pixi world coordinate system. */
