@@ -29,9 +29,9 @@
 
 import { AttachmentCacheData, Spine } from './Spine';
 
-import type { Batch, BatchableMeshElement, Batcher, BLEND_MODES, Texture } from 'pixi.js';
+import type { Batch, Batcher, BLEND_MODES, DefaultBatchableMeshElement, Matrix, Texture } from 'pixi.js';
 
-export class BatchableSpineSlot implements BatchableMeshElement
+export class BatchableSpineSlot implements DefaultBatchableMeshElement
 {
     indexOffset = 0;
     attributeOffset = 0;
@@ -56,6 +56,8 @@ export class BatchableSpineSlot implements BatchableMeshElement
     darkTint: number;
 
     texture: Texture;
+
+    transform: Matrix;
 
     // used internally by batcher specific..
     // stored for efficient updating..
@@ -112,6 +114,7 @@ export class BatchableSpineSlot implements BatchableMeshElement
         roundPixels: 0 | 1)
     {
         this.renderable = renderable;
+        this.transform = renderable.groupTransform;
         this.data = data;
 
         if (data.clipped)
@@ -138,6 +141,6 @@ export class BatchableSpineSlot implements BatchableMeshElement
 
         this.blendMode = blendMode;
 
-        this.batcherName = 'darkTint';// data.darkTint ? 'darkTint' : 'default';
+        this.batcherName = data.darkTint ? 'darkTint' : 'default';
     }
 }
