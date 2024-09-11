@@ -41,7 +41,7 @@ export class BatchableSpineSlot implements BatchableMeshElement
 
     batcherName = 'darkTint';
 
-    packAsQuad = false;
+    readonly packAsQuad = false;
 
     renderable: Spine;
 
@@ -59,11 +59,11 @@ export class BatchableSpineSlot implements BatchableMeshElement
 
     // used internally by batcher specific..
     // stored for efficient updating..
-    indexStart: number;
-    textureId: number;
-    attributeStart: number;
-    batcher: Batcher;
-    batch: Batch;
+    _textureId: number;
+    _attributeStart: number;
+    _indexStart: number;
+    _batcher: Batcher;
+    _batch: Batch;
 
     get color()
     {

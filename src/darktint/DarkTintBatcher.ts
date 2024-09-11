@@ -1,5 +1,7 @@
 import {
-    BatchableMeshElement, BatchableQuadElement, Batcher,
+    Batcher,
+    DefaultBatchableMeshElement,
+    DefaultBatchableQuadElement,
     extensions,
     ExtensionType,
     Shader
@@ -28,7 +30,7 @@ export class DarkTintBatcher extends Batcher
     public vertexSize = 7;
 
     public packAttributes(
-        element: BatchableMeshElement & { darkColor: number },
+        element: DefaultBatchableMeshElement & { darkColor: number },
         float32View: Float32Array,
         uint32View: Uint32Array,
         index: number,
@@ -37,7 +39,7 @@ export class DarkTintBatcher extends Batcher
     {
         const textureIdAndRound = (textureId << 16) | (element.roundPixels & 0xFFFF);
 
-        const wt = element.groupTransform;
+        const wt = element.transform;
 
         const a = wt.a;
         const b = wt.b;
@@ -75,17 +77,16 @@ export class DarkTintBatcher extends Batcher
     }
 
     public packQuadAttributes(
-        element: BatchableQuadElement & { darkColor: number },
+        element: DefaultBatchableQuadElement & { darkColor: number },
         float32View: Float32Array,
         uint32View: Uint32Array,
         index: number,
         textureId: number
     )
     {
-        const sprite = element.renderable;
         const texture = element.texture;
 
-        const wt = sprite.groupTransform;
+        const wt = element.transform;
 
         const a = wt.a;
         const b = wt.b;

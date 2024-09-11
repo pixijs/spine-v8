@@ -111,7 +111,7 @@ export class SpinePipe implements RenderPipe<Spine>
 
                 if (!cacheData.skipRender)
                 {
-                    batcher.addToBatch(batchableSpineSlot);
+                    batcher.addToBatch(batchableSpineSlot, instructionSet);
                 }
             }
 
