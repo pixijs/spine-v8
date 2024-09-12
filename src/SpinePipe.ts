@@ -111,7 +111,7 @@ export class SpinePipe implements RenderPipe<Spine>
 
                 if (!cacheData.skipRender)
                 {
-                    batcher.addToBatch(batchableSpineSlot);
+                    batcher.addToBatch(batchableSpineSlot, instructionSet);
                 }
             }
 
@@ -122,7 +122,7 @@ export class SpinePipe implements RenderPipe<Spine>
                 const container = containerAttachment.container;
 
                 container.includeInBuild = true;
-                collectAllRenderables(container, instructionSet, this.renderer.renderPipes);
+                collectAllRenderables(container, instructionSet, this.renderer);
                 container.includeInBuild = false;
             }
         }
@@ -152,7 +152,7 @@ export class SpinePipe implements RenderPipe<Spine>
                 {
                     const batchableSpineSlot = gpuSpine.slotBatches[spine._getCachedData(slot, attachment).id];
 
-                    batchableSpineSlot.batcher?.updateElement(batchableSpineSlot);
+                    batchableSpineSlot._batcher?.updateElement(batchableSpineSlot);
                 }
             }
         }

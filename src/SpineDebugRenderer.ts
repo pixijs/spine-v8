@@ -179,7 +179,7 @@ export class SpineDebugRenderer implements ISpineDebugRenderer
         debugDisplayObjects.parentDebugContainer.addChild(debugDisplayObjects.pathsLine);
         debugDisplayObjects.parentDebugContainer.addChild(debugDisplayObjects.eventText);
 
-        debugDisplayObjects.parentDebugContainer.zIndex = 9999999;
+        (debugDisplayObjects.parentDebugContainer as any).zIndex = 9999999;
 
         // Disable screen reader and mouse input on debug objects.
         (debugDisplayObjects.parentDebugContainer as any).accessibleChildren = false;
