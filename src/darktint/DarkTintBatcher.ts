@@ -1,5 +1,6 @@
 import {
     Batcher,
+    Color,
     DefaultBatchableMeshElement,
     DefaultBatchableQuadElement,
     extensions,
@@ -51,7 +52,8 @@ export class DarkTintBatcher extends Batcher
         const { positions, uvs } = element;
 
         const argb = element.color;
-        const darkColor = element.darkColor;
+        const worldAlpha = ((argb >> 24) & 0xFF) / 255;
+        const darkColor = Color.shared.setValue(element.darkColor).premultiply(worldAlpha, true).toPremultiplied(1, false);
 
         const offset = element.attributeOffset;
         const end = offset + element.attributeSize;
