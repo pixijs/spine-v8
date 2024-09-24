@@ -109,7 +109,6 @@ export class BatchableSpineSlot implements DefaultBatchableMeshElement
     setData(
         renderable:Spine,
         data:AttachmentCacheData,
-        texture:Texture,
         blendMode:BLEND_MODES,
         roundPixels: 0 | 1)
     {
@@ -136,7 +135,7 @@ export class BatchableSpineSlot implements DefaultBatchableMeshElement
             this.uvs = data.uvs;
         }
 
-        this.texture = texture;
+        this.texture = data.texture;
         this.roundPixels = roundPixels;
 
         this.blendMode = blendMode;

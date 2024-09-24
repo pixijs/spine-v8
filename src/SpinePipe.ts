@@ -33,7 +33,6 @@ import {
     InstructionSet,
     type Renderer,
     type RenderPipe,
-    Texture
 } from 'pixi.js';
 import { BatchableSpineSlot } from './BatchableSpineSlot';
 import { Spine } from './Spine';
@@ -73,9 +72,43 @@ export class SpinePipe implements RenderPipe<Spine>
     validateRenderable(spine: Spine): boolean
     {
         spine._applyState();
-        // loop through and see if the mesh lengths have changed..
 
-        return spine.spineAttachmentsDirty;
+        // if pine attachments have changed, we need to rebuild the batch!
+        if (spine.spineAttachmentsDirty)
+        {
+            return true;
+        }
+        // if the textures have changed, we need to rebuild the batch, but only if the texture is not already in the batch
+        else if (spine.spineTexturesDirty)
+        {
+            // loop through and see if the textures have changed..
+            const drawOrder = spine.skeleton.drawOrder;
+            const gpuSpine = this.gpuSpineData[spine.uid];
+
+            for (let i = 0, n = drawOrder.length; i < n; i++)
+            {
+                const slot = drawOrder[i];
+                const attachment = slot.getAttachment();
+
+                if (attachment instanceof RegionAttachment || attachment instanceof MeshAttachment)
+                {
+                    const cacheData = spine._getCachedData(slot, attachment);
+                    const batchableSpineSlot = gpuSpine.slotBatches[cacheData.id];
+
+                    const texture = cacheData.texture;
+
+                    if (texture !== batchableSpineSlot.texture)
+                    {
+                        if (!batchableSpineSlot._batcher.checkAndUpdateTexture(batchableSpineSlot, texture))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     addRenderable(spine: Spine, instructionSet:InstructionSet)
@@ -104,7 +137,6 @@ export class SpinePipe implements RenderPipe<Spine>
                 batchableSpineSlot.setData(
                     spine,
                     cacheData,
-                    (attachment.region?.texture.texture) || Texture.EMPTY,
                     blendMode,
                     roundPixels
                 );
