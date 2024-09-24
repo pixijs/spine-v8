@@ -36,6 +36,7 @@ import {
     DEG_TO_RAD,
     DestroyOptions,
     PointData,
+    Texture,
     Ticker,
     ViewContainer,
 } from 'pixi.js';
@@ -104,6 +105,7 @@ export interface AttachmentCacheData
     darkColor: Color | null;
     darkTint: boolean;
     skipRender: boolean;
+    texture: Texture;
     clippedData?: {
         vertices: Float32Array;
         uvs: Float32Array;
@@ -145,10 +147,12 @@ export class Spine extends ViewContainer
         return slot;
     }
 
-    public spineAttachmentsDirty: boolean;
+    public spineAttachmentsDirty = true;
+    public spineTexturesDirty = true;
+
     private _lastAttachments: Attachment[];
 
-    private _stateChanged: boolean;
+    private _stateChanged = true;
     private attachmentCacheData: Record<string, AttachmentCacheData>[] = [];
 
     public get debug(): ISpineDebugRenderer | undefined
@@ -443,6 +447,14 @@ export class Spine extends ViewContainer
 
                     cacheData.skipRender = cacheData.clipped = false;
 
+                    const texture = attachment.region?.texture.texture || Texture.EMPTY;
+
+                    if (cacheData.texture !== texture)
+                    {
+                        cacheData.texture = texture;
+                        this.spineTexturesDirty = true;
+                    }
+
                     if (clipper.isClipping())
                     {
                         this.updateClippingData(cacheData);
@@ -595,6 +607,7 @@ export class Spine extends ViewContainer
                 darkColor: new Color(0, 0, 0, 0),
                 darkTint: false,
                 skipRender: false,
+                texture: attachment.region?.texture.texture,
             };
         }
         else
@@ -611,6 +624,7 @@ export class Spine extends ViewContainer
                 darkColor: new Color(0, 0, 0, 0),
                 darkTint: false,
                 skipRender: false,
+                texture: attachment.region?.texture.texture,
             };
         }
 
