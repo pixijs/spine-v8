@@ -1,11 +1,6 @@
-# @pixi/spine-pixi
+# Project Status
 
-This repo is a port of the @esotericsoftware/spine-pixi runtime to PixiJS v8.
+Hey everyone, we have now completed the migration of this repo to the official Esoteric Software repo for them to maintain. You can find the new repo here:
+https://github.com/EsotericSoftware/spine-runtimes/tree/4.2/spine-ts
 
-Once all features are ported we will look to add this into the esotericsoftware repo.
-
-🚨 WARNING: Missing Features 🚨
-
-- Ability to set dark tint
-- Debug renderer has not been fully tested so YMMV
-- iife bundle not tested
+If you are still using this repo, the migration should be as simple as swapping out the imports for `@esotericsoftware/spine-pixi-v8`
